@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>角色入口</title>
+  <style>
+    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:980px; margin:26px auto; padding:0 16px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .card { background:#fff; border-radius:12px; padding:22px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+    .btn { display:inline-block; margin-top:12px; text-decoration:none; color:#fff; padding:10px 14px; border-radius:8px; font-weight:700; }
+    .leader { background:#2563eb; }
+    .eng { background:#059669; }
+    .hint { color:#475467; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>工艺决策辅助系统</div>
+    <div>当前用户：{{ username }} | 当前角色：{{ role }} <a href="/history">历史记录</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card" style="margin-bottom:16px;">
+      <h2>账号角色页</h2>
+      <p class="hint">按角色进入功能入口。班组长走异常诊断，工程师走路径优化。</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>班组长入口</h3>
+        <p class="hint">处理现场异常，快速得到可执行排查动作。</p>
+        <a class="btn leader" href="/role/switch/leader">进入异常诊断</a>
+      </div>
+      <div class="card">
+        <h3>工程师入口</h3>
+        <p class="hint">基于工时与工序路径识别瓶颈，输出优化建议。</p>
+        <a class="btn eng" href="/role/switch/engineer">进入路径优化</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

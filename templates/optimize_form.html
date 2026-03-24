@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>路径优化</title>
+  <style>
+    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:920px; margin:24px auto; padding:0 16px; }
+    .card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+    label { display:block; margin:12px 0 6px; font-weight:600; }
+    input, select { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:8px; padding:10px; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    button { margin-top:18px; border:none; border-radius:8px; padding:12px 16px; background:#059669; color:#fff; font-weight:700; cursor:pointer; }
+    .hint { color:#475467; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>路径优化</div>
+    <div>用户：{{ username }} | 角色：{{ role }} <a href="/role">角色页</a> <a href="/history">历史记录</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <h2>工程师优化查询</h2>
+      <p class="hint">默认读取 `reference` 目录的 Excel，输入部分文件名即可匹配。</p>
+      <form method="post" action="/optimize">
+        <label>Excel 文件名（支持部分名称）</label>
+        <input name="excel_name" placeholder="当日人员需求计算表通用版_250304_x_v2.9 - 副本">
+        <p class="hint">检测到文件：{{ excels|join("、") }}</p>
+        <div class="row">
+          <div>
+            <label>关注工段</label>
+            <input name="focus_stage" value="组装段">
+          </div>
+          <div>
+            <label>目标日产能</label>
+            <input name="target_capacity" value="3000">
+          </div>
+        </div>
+        <label>优化优先级</label>
+        <select name="priority">
+          <option value="先产能" selected>先产能</option>
+          <option value="先质量">先质量</option>
+          <option value="先人力">先人力</option>
+        </select>
+        <button type="submit">开始优化分析</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>报告详情</title>
+  <style>
+    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:1100px; margin:24px auto; padding:0 16px; }
+    .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+    pre { background:#0b1020; color:#d8e1ff; padding:16px; border-radius:10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>报告详情</div>
+    <div><a href="/history">返回历史</a> <a href="/role">角色页</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <h3>{{ report_name }}</h3>
+      <pre>{{ content }}</pre>
+    </div>
+  </div>
+</body>
+</html>

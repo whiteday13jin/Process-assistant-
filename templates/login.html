@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 - 工艺决策辅助系统</title>
+  <style>
+    body { margin:0; font-family:"Microsoft YaHei",sans-serif; background:linear-gradient(135deg,#e8f2ff,#edf9f1); }
+    .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .card { width:360px; background:#fff; border-radius:14px; padding:26px; box-shadow:0 14px 36px rgba(0,0,0,.12); }
+    h2 { margin:0 0 10px 0; }
+    p { color:#475467; margin:0 0 14px 0; font-size:14px; }
+    label { display:block; margin:12px 0 6px; font-weight:600; }
+    input { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:9px; padding:10px; }
+    button { width:100%; margin-top:16px; border:none; border-radius:9px; padding:12px; background:#2563eb; color:#fff; font-weight:700; cursor:pointer; }
+    .err { margin-top:10px; color:#b42318; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>系统登录</h2>
+      <p>请输入账号进入班组长/工程师入口。</p>
+      <form method="post" action="/login">
+        <label>账号</label>
+        <input name="username" placeholder="user" autocomplete="username">
+        <label>密码</label>
+          <input type="password" name="password" placeholder="请输入密码" autocomplete="current-password">
+        <button type="submit">登录</button>
+      </form>
+      {% if error %}
+      <div class="err">{{ error }}</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

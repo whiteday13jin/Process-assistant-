@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>优化结果</title>
+  <style>
+    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:1080px; margin:24px auto; padding:0 16px; }
+    .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); margin-bottom:12px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border-bottom:1px solid #e4e7ec; padding:8px; text-align:left; font-size:14px; }
+    th { background:#f9fafb; }
+    .meta { color:#475467; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>优化结果</div>
+    <div><a href="/optimize">继续优化</a> <a href="/role">角色页</a> <a href="/history">历史记录</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <h2>优化分析已完成</h2>
+      <p class="meta">来源：{{ result.focus_filter.source_excel }}</p>
+      <p class="meta">关注工段：{{ result.focus_filter.focus_stage }} | 优先级：{{ result.focus_filter.priority }} | 目标日产能：{{ result.focus_filter.target_capacity }}</p>
+      <p class="meta">报告已保存：{{ report_path }}</p>
+    </div>
+    <div class="card">
+      <h3>瓶颈（Top 15）</h3>
+      <table>
+        <thead>
+          <tr><th>工序</th><th>负载比</th><th>日产</th><th>不良率</th><th>严重度</th></tr>
+        </thead>
+        <tbody>
+          {% for b in result.bottlenecks %}
+          <tr>
+            <td>{{ b.process_name }}</td>
+            <td>{{ b.load_ratio }}</td>
+            <td>{{ b.daily_output }}</td>
+            <td>{{ b.defect_rate }}</td>
+            <td>{{ b.severity }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>优化动作（Top 20）</h3>
+      <table>
+        <thead>
+          <tr><th>优先级</th><th>类型</th><th>工序</th><th>建议动作</th></tr>
+        </thead>
+        <tbody>
+          {% for a in result.optimization_actions %}
+          <tr>
+            <td>{{ a.priority }}</td>
+            <td>{{ a.type }}</td>
+            <td>{{ a.process_name }}</td>
+            <td>{{ a.action }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

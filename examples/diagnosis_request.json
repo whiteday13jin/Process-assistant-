@@ -1,0 +1,11 @@
+﻿{
+  "request_id": "REQ-20260324-001",
+  "process_id": "P10",
+  "symptom_ids": ["S07", "S08"],
+  "observed": {
+    "defect_rate": 0.061,
+    "flux_age_hours": 16,
+    "shift": "N"
+  },
+  "top_k": 3
+}

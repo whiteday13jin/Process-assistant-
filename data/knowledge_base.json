@@ -1,0 +1,393 @@
+﻿{
+  "route": {
+    "id": "route_fpcb_heatfilm_v1",
+    "name": "Flexible PCB Heating Film Typical Route",
+    "domain": "discrete_manufacturing"
+  },
+  "processes": [
+    {"id": "P01", "route_id": "route_fpcb_heatfilm_v1", "sequence": 1, "name": "PI膜下料", "category": "prep", "stage": "前处理"},
+    {"id": "P02", "route_id": "route_fpcb_heatfilm_v1", "sequence": 2, "name": "导电浆料印刷", "category": "print", "stage": "图形形成"},
+    {"id": "P03", "route_id": "route_fpcb_heatfilm_v1", "sequence": 3, "name": "烘烤固化", "category": "thermal", "stage": "图形形成"},
+    {"id": "P04", "route_id": "route_fpcb_heatfilm_v1", "sequence": 4, "name": "曝光对位", "category": "lithography", "stage": "图形形成"},
+    {"id": "P05", "route_id": "route_fpcb_heatfilm_v1", "sequence": 5, "name": "显影/蚀刻", "category": "etch", "stage": "图形形成"},
+    {"id": "P06", "route_id": "route_fpcb_heatfilm_v1", "sequence": 6, "name": "清洗干燥", "category": "clean", "stage": "图形形成"},
+    {"id": "P07", "route_id": "route_fpcb_heatfilm_v1", "sequence": 7, "name": "双面胶/绝缘层贴合", "category": "lamination", "stage": "层压贴合"},
+    {"id": "P08", "route_id": "route_fpcb_heatfilm_v1", "sequence": 8, "name": "冲孔冲型", "category": "diecut", "stage": "成型"},
+    {"id": "P09", "route_id": "route_fpcb_heatfilm_v1", "sequence": 9, "name": "预焊接", "category": "solder", "stage": "组装"},
+    {"id": "P10", "route_id": "route_fpcb_heatfilm_v1", "sequence": 10, "name": "焊线", "category": "solder", "stage": "组装"},
+    {"id": "P11", "route_id": "route_fpcb_heatfilm_v1", "sequence": 11, "name": "模压定型", "category": "press", "stage": "组装"},
+    {"id": "P12", "route_id": "route_fpcb_heatfilm_v1", "sequence": 12, "name": "电阻/耐压/外观检测", "category": "inspection", "stage": "检测与包装"}
+  ],
+  "symptoms": [
+    {"id": "S01", "code": "OPEN_CIRCUIT", "name": "开路", "severity": 5},
+    {"id": "S02", "code": "SHORT_CIRCUIT", "name": "短路", "severity": 5},
+    {"id": "S03", "code": "HIGH_RESISTANCE", "name": "阻值偏高", "severity": 4},
+    {"id": "S04", "code": "LOW_RESISTANCE", "name": "阻值偏低", "severity": 4},
+    {"id": "S05", "code": "BUBBLE", "name": "贴合起泡", "severity": 4},
+    {"id": "S06", "code": "DELAMINATION", "name": "分层", "severity": 5},
+    {"id": "S07", "code": "POOR_SOLDER", "name": "虚焊", "severity": 4},
+    {"id": "S08", "code": "PAD_OXIDATION", "name": "焊盘氧化", "severity": 3},
+    {"id": "S09", "code": "HIPOT_FAIL", "name": "耐压不良", "severity": 5},
+    {"id": "S10", "code": "MISALIGNMENT", "name": "图形偏位", "severity": 4}
+  ],
+  "causes": [
+    {
+      "id": "C01",
+      "name": "曝光能量不足",
+      "category": "parameter",
+      "process_ids": ["P04"],
+      "symptom_ids": ["S01", "S10"],
+      "base_weight": 1.2,
+      "conditions": {"defect_rate": {"op": ">=", "value": 0.03}}
+    },
+    {
+      "id": "C02",
+      "name": "蚀刻液浓度偏高",
+      "category": "chemical",
+      "process_ids": ["P05"],
+      "symptom_ids": ["S01", "S03"],
+      "base_weight": 1.15,
+      "conditions": {"defect_rate": {"op": ">=", "value": 0.02}}
+    },
+    {
+      "id": "C03",
+      "name": "蚀刻补偿不足导致残铜",
+      "category": "chemical",
+      "process_ids": ["P05"],
+      "symptom_ids": ["S02", "S04"],
+      "base_weight": 1.1,
+      "conditions": {}
+    },
+    {
+      "id": "C04",
+      "name": "贴合压力不足",
+      "category": "equipment",
+      "process_ids": ["P07", "P11"],
+      "symptom_ids": ["S05", "S06", "S09"],
+      "base_weight": 1.25,
+      "conditions": {"extra_factor": {"op": ">", "value": 1.1}}
+    },
+    {
+      "id": "C05",
+      "name": "基材含水率超标",
+      "category": "material",
+      "process_ids": ["P03", "P07"],
+      "symptom_ids": ["S05", "S06"],
+      "base_weight": 1.05,
+      "conditions": {"humidity": {"op": ">", "value": 55}}
+    },
+    {
+      "id": "C06",
+      "name": "焊接温度曲线偏低",
+      "category": "parameter",
+      "process_ids": ["P09", "P10"],
+      "symptom_ids": ["S07", "S08", "S09"],
+      "base_weight": 1.2,
+      "conditions": {"defect_rate": {"op": ">=", "value": 0.04}}
+    },
+    {
+      "id": "C07",
+      "name": "助焊剂活性衰减",
+      "category": "material",
+      "process_ids": ["P09", "P10"],
+      "symptom_ids": ["S07", "S08"],
+      "base_weight": 1.1,
+      "conditions": {"flux_age_hours": {"op": ">", "value": 12}}
+    },
+    {
+      "id": "C08",
+      "name": "冲切刀模磨损",
+      "category": "equipment",
+      "process_ids": ["P08"],
+      "symptom_ids": ["S10", "S06"],
+      "base_weight": 1.0,
+      "conditions": {"tooling_shots": {"op": ">", "value": 100000}}
+    },
+    {
+      "id": "C09",
+      "name": "清洁残留离子污染",
+      "category": "cleanliness",
+      "process_ids": ["P06", "P12"],
+      "symptom_ids": ["S09", "S08"],
+      "base_weight": 1.15,
+      "conditions": {"ionic_residue": {"op": ">", "value": 1.5}}
+    },
+    {
+      "id": "C10",
+      "name": "检测工装接触不稳定",
+      "category": "equipment",
+      "process_ids": ["P12"],
+      "symptom_ids": ["S03", "S04", "S09"],
+      "base_weight": 0.95,
+      "conditions": {}
+    },
+    {
+      "id": "C11",
+      "name": "印刷网版张力衰减",
+      "category": "equipment",
+      "process_ids": ["P02"],
+      "symptom_ids": ["S01", "S03", "S10"],
+      "base_weight": 1.1,
+      "conditions": {}
+    },
+    {
+      "id": "C12",
+      "name": "固化炉温波动",
+      "category": "equipment",
+      "process_ids": ["P03"],
+      "symptom_ids": ["S03", "S04", "S06"],
+      "base_weight": 1.05,
+      "conditions": {"oven_temp_delta": {"op": ">", "value": 8}}
+    }
+  ],
+  "solutions": [
+    {
+      "id": "SOL01",
+      "cause_id": "C01",
+      "owner_role": "班组长",
+      "expected_minutes": 20,
+      "actions": [
+        "执行曝光机能量点检并记录3次实测值",
+        "将曝光能量上调5%后试产10片",
+        "对偏位样品复核对位Mark偏差并校准夹具"
+      ],
+      "checkpoints": ["试产开路率下降>=50%", "Mark偏差<=0.05mm"]
+    },
+    {
+      "id": "SOL02",
+      "cause_id": "C02",
+      "owner_role": "工艺工程师",
+      "expected_minutes": 30,
+      "actions": [
+        "抽测蚀刻液浓度并与标准窗口比对",
+        "按SOP补液并复测比重",
+        "锁定异常批次并做首件复判"
+      ],
+      "checkpoints": ["线宽偏差回到规格内", "开路率恢复到基线"]
+    },
+    {
+      "id": "SOL03",
+      "cause_id": "C03",
+      "owner_role": "工艺工程师",
+      "expected_minutes": 30,
+      "actions": [
+        "增加蚀刻时间补偿2-3秒",
+        "检查喷淋压力并清理堵塞喷嘴",
+        "对短路样品做显微确认并判定残铜位置"
+      ],
+      "checkpoints": ["短路点位减少", "喷淋压力回到控制限"]
+    },
+    {
+      "id": "SOL04",
+      "cause_id": "C04",
+      "owner_role": "班组长",
+      "expected_minutes": 25,
+      "actions": [
+        "点检压合设备压力与温度闭环",
+        "将压合压力上调一个工艺档并试压5片",
+        "执行贴合后真空脱泡10分钟"
+      ],
+      "checkpoints": ["起泡面积<2%", "剥离强度达标"]
+    },
+    {
+      "id": "SOL05",
+      "cause_id": "C05",
+      "owner_role": "物料工程师",
+      "expected_minutes": 40,
+      "actions": [
+        "测量来料含水率并隔离超限批次",
+        "将基材预烘烤延长20分钟",
+        "更新物料开封时长记录卡"
+      ],
+      "checkpoints": ["含水率回到规范", "分层不良下降"]
+    },
+    {
+      "id": "SOL06",
+      "cause_id": "C06",
+      "owner_role": "班组长",
+      "expected_minutes": 20,
+      "actions": [
+        "复核烙铁/回流焊实测温度",
+        "将关键焊点升温10℃后复焊验证",
+        "对首件执行拉力和阻值双确认"
+      ],
+      "checkpoints": ["虚焊率下降", "拉力测试通过"]
+    },
+    {
+      "id": "SOL07",
+      "cause_id": "C07",
+      "owner_role": "班组长",
+      "expected_minutes": 15,
+      "actions": [
+        "更换新助焊剂并标记启用时间",
+        "对焊盘执行酒精清洁并重新焊接",
+        "将助焊剂在岗有效时长限制为8小时"
+      ],
+      "checkpoints": ["焊点润湿角改善", "焊盘氧化不良下降"]
+    },
+    {
+      "id": "SOL08",
+      "cause_id": "C08",
+      "owner_role": "设备工程师",
+      "expected_minutes": 45,
+      "actions": [
+        "检查刀模磨损量并记录刀口状态",
+        "更换刀模或执行刃口修磨",
+        "复测冲型尺寸CPK并放行"
+      ],
+      "checkpoints": ["尺寸偏位恢复", "毛边率下降"]
+    },
+    {
+      "id": "SOL09",
+      "cause_id": "C09",
+      "owner_role": "工艺工程师",
+      "expected_minutes": 30,
+      "actions": [
+        "执行离子残留抽检并记录ppm",
+        "提升清洗槽换液频率并补充DI水",
+        "增加干燥段时间避免残留液体"
+      ],
+      "checkpoints": ["离子残留值达标", "耐压不良下降"]
+    },
+    {
+      "id": "SOL10",
+      "cause_id": "C10",
+      "owner_role": "测试工程师",
+      "expected_minutes": 20,
+      "actions": [
+        "清洁测试治具探针并校验接触阻抗",
+        "用黄金样件校验测试一致性",
+        "排查线缆松动并锁紧接插件"
+      ],
+      "checkpoints": ["重复测量偏差<2%", "误判率下降"]
+    },
+    {
+      "id": "SOL11",
+      "cause_id": "C11",
+      "owner_role": "设备工程师",
+      "expected_minutes": 35,
+      "actions": [
+        "检测网版张力并与寿命卡比对",
+        "执行网版重张或更换",
+        "做印刷线宽首件确认"
+      ],
+      "checkpoints": ["线宽稳定", "偏位不良下降"]
+    },
+    {
+      "id": "SOL12",
+      "cause_id": "C12",
+      "owner_role": "设备工程师",
+      "expected_minutes": 25,
+      "actions": [
+        "读取炉温曲线并核对上下限",
+        "校准温控模块与热电偶",
+        "异常炉位样品独立标识并复检"
+      ],
+      "checkpoints": ["炉温波动<=±5℃", "阻值分布收敛"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "CASE001",
+      "process_id": "P05",
+      "symptom_ids": ["S01", "S03"],
+      "cause_id": "C02",
+      "context": {"defect_rate": 0.045, "shift": "N"},
+      "success_score": 0.88
+    },
+    {
+      "id": "CASE002",
+      "process_id": "P07",
+      "symptom_ids": ["S05"],
+      "cause_id": "C04",
+      "context": {"extra_factor": 1.18},
+      "success_score": 0.83
+    },
+    {
+      "id": "CASE003",
+      "process_id": "P10",
+      "symptom_ids": ["S07", "S08"],
+      "cause_id": "C06",
+      "context": {"defect_rate": 0.06},
+      "success_score": 0.86
+    },
+    {
+      "id": "CASE004",
+      "process_id": "P10",
+      "symptom_ids": ["S07"],
+      "cause_id": "C07",
+      "context": {"flux_age_hours": 18},
+      "success_score": 0.79
+    },
+    {
+      "id": "CASE005",
+      "process_id": "P08",
+      "symptom_ids": ["S10"],
+      "cause_id": "C08",
+      "context": {"tooling_shots": 120000},
+      "success_score": 0.84
+    },
+    {
+      "id": "CASE006",
+      "process_id": "P12",
+      "symptom_ids": ["S09"],
+      "cause_id": "C09",
+      "context": {"ionic_residue": 2.1},
+      "success_score": 0.9
+    },
+    {
+      "id": "CASE007",
+      "process_id": "P04",
+      "symptom_ids": ["S10"],
+      "cause_id": "C01",
+      "context": {"defect_rate": 0.032},
+      "success_score": 0.82
+    },
+    {
+      "id": "CASE008",
+      "process_id": "P03",
+      "symptom_ids": ["S03"],
+      "cause_id": "C12",
+      "context": {"oven_temp_delta": 11},
+      "success_score": 0.8
+    },
+    {
+      "id": "CASE009",
+      "process_id": "P02",
+      "symptom_ids": ["S01", "S10"],
+      "cause_id": "C11",
+      "context": {"screen_tension": 16},
+      "success_score": 0.77
+    },
+    {
+      "id": "CASE010",
+      "process_id": "P12",
+      "symptom_ids": ["S03", "S04"],
+      "cause_id": "C10",
+      "context": {"fixture_contact_r": 0.23},
+      "success_score": 0.74
+    }
+  ],
+  "rules": [
+    {"id": "R001", "process_ids": ["P04"], "symptom_ids": ["S01", "S10"], "cause_id": "C01", "weight": 0.95},
+    {"id": "R002", "process_ids": ["P05"], "symptom_ids": ["S01", "S03"], "cause_id": "C02", "weight": 0.92},
+    {"id": "R003", "process_ids": ["P05"], "symptom_ids": ["S02", "S04"], "cause_id": "C03", "weight": 0.9},
+    {"id": "R004", "process_ids": ["P07", "P11"], "symptom_ids": ["S05", "S06"], "cause_id": "C04", "weight": 0.96},
+    {"id": "R005", "process_ids": ["P03", "P07"], "symptom_ids": ["S05", "S06"], "cause_id": "C05", "weight": 0.81},
+    {"id": "R006", "process_ids": ["P09", "P10"], "symptom_ids": ["S07", "S08"], "cause_id": "C06", "weight": 0.9},
+    {"id": "R007", "process_ids": ["P09", "P10"], "symptom_ids": ["S07", "S08"], "cause_id": "C07", "weight": 0.76},
+    {"id": "R008", "process_ids": ["P08"], "symptom_ids": ["S10", "S06"], "cause_id": "C08", "weight": 0.84},
+    {"id": "R009", "process_ids": ["P06", "P12"], "symptom_ids": ["S09", "S08"], "cause_id": "C09", "weight": 0.9},
+    {"id": "R010", "process_ids": ["P12"], "symptom_ids": ["S03", "S04", "S09"], "cause_id": "C10", "weight": 0.7},
+    {"id": "R011", "process_ids": ["P02"], "symptom_ids": ["S01", "S03", "S10"], "cause_id": "C11", "weight": 0.86},
+    {"id": "R012", "process_ids": ["P03"], "symptom_ids": ["S03", "S04", "S06"], "cause_id": "C12", "weight": 0.78},
+    {"id": "R013", "process_ids": ["P11"], "symptom_ids": ["S09"], "cause_id": "C04", "weight": 0.84},
+    {"id": "R014", "process_ids": ["P10"], "symptom_ids": ["S09"], "cause_id": "C06", "weight": 0.82},
+    {"id": "R015", "process_ids": ["P10"], "symptom_ids": ["S08"], "cause_id": "C07", "weight": 0.71},
+    {"id": "R016", "process_ids": ["P12"], "symptom_ids": ["S09"], "cause_id": "C10", "weight": 0.66},
+    {"id": "R017", "process_ids": ["P03"], "symptom_ids": ["S06"], "cause_id": "C12", "weight": 0.74},
+    {"id": "R018", "process_ids": ["P07"], "symptom_ids": ["S05"], "cause_id": "C04", "weight": 0.91},
+    {"id": "R019", "process_ids": ["P05"], "symptom_ids": ["S02"], "cause_id": "C03", "weight": 0.79},
+    {"id": "R020", "process_ids": ["P06"], "symptom_ids": ["S09"], "cause_id": "C09", "weight": 0.88}
+  ]
+}

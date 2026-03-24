@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>历史记录</title>
+  <style>
+    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:1080px; margin:24px auto; padding:0 16px; }
+    .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); margin-bottom:12px; }
+    .row { display:grid; grid-template-columns:1fr 1fr 140px; gap:10px; align-items:end; }
+    input, select { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:8px; padding:10px; }
+    button { border:none; border-radius:8px; padding:10px 14px; background:#2563eb; color:#fff; font-weight:700; cursor:pointer; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border-bottom:1px solid #e4e7ec; padding:8px; text-align:left; font-size:14px; }
+    th { background:#f9fafb; }
+    a.link { color:#2563eb; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>历史记录</div>
+    <div><a href="/role">角色页</a> <a href="/diagnose">异常诊断</a> <a href="/optimize">路径优化</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <form method="get" action="/history" class="row">
+        <div>
+          <label>类型</label>
+          <select name="kind">
+            <option value="all" {% if kind == "all" %}selected{% endif %}>全部</option>
+            <option value="diagnosis" {% if kind == "diagnosis" %}selected{% endif %}>诊断</option>
+            <option value="optimization" {% if kind == "optimization" %}selected{% endif %}>优化</option>
+          </select>
+        </div>
+        <div>
+          <label>关键字（文件名）</label>
+          <input name="q" value="{{ keyword }}" placeholder="REQ-20260101 或 optimization_web">
+        </div>
+        <div>
+          <button type="submit">查询</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h3>报告列表（{{ reports|length }}）</h3>
+      <table>
+        <thead>
+          <tr><th>文件名</th><th>类型</th><th>时间</th><th>大小KB</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for r in reports %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td>{{ r.kind }}</td>
+            <td>{{ r.mtime }}</td>
+            <td>{{ r.size_kb }}</td>
+            <td><a class="link" href="/history/view?name={{ r.name }}">查看</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
