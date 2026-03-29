@@ -1,0 +1,105 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAG 工艺问答</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --primary: #7c3aed;
+      --danger-bg: #fef2f2;
+      --danger-text: #b42318;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    .nav {
+      background:#0b1220;
+      color:#fff;
+      padding:12px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:980px; margin:24px auto; padding:0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow:0 8px 22px rgba(15, 23, 42, 0.04);
+      margin-bottom: 12px;
+    }
+    textarea, input {
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      padding:10px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    textarea { min-height:130px; resize: vertical; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+    .btn {
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      background:var(--primary);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:12px;
+    }
+    .err {
+      background:var(--danger-bg);
+      color:var(--danger-text);
+      border:1px solid #fecaca;
+      border-radius:10px;
+      padding:10px;
+      margin-top:10px;
+    }
+    .hint { color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>RAG 工艺问答</div>
+    <div><a href="/role">角色页</a> <a href="/history">历史记录</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <h2>知识问答（含来源引用）</h2>
+      <p class="hint">首次查询若索引不存在，系统会自动基于 <code>data/rag_docs</code> 构建索引。</p>
+      <form method="post" action="/rag">
+        <label>问题</label>
+        <textarea name="question" placeholder="例如：焊线后虚焊先看哪些因素？">{{ question or '' }}</textarea>
+        <div class="grid">
+          <div>
+            <label>Top-K 检索</label>
+            <input name="top_k" type="number" min="1" max="10" value="{{ top_k or 4 }}">
+          </div>
+          <div>
+            <label>上下文片段数</label>
+            <input name="max_context_chunks" type="number" min="1" max="10" value="{{ max_context_chunks or 4 }}">
+          </div>
+        </div>
+        <button class="btn" type="submit">执行 RAG 查询</button>
+      </form>
+      {% if error %}
+      <div class="err">{{ error }}</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

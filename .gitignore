@@ -26,6 +26,7 @@ htmlcov/
 # Runtime outputs and local data
 reports/
 data/feedback_log.jsonl
+data/rag_index/
 reference/*.xlsx
 
 # Environment files (secrets)

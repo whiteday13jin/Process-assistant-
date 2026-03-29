@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -22,7 +22,7 @@
 <body>
   <div class="nav">
     <div>历史记录</div>
-    <div><a href="/role">角色页</a> <a href="/diagnose">异常诊断</a> <a href="/optimize">路径优化</a> <a href="/logout">退出</a></div>
+    <div><a href="/role">角色页</a> <a href="/diagnose">异常诊断</a> <a href="/optimize">路径优化</a> <a href="/rag">RAG 问答</a> <a href="/logout">退出</a></div>
   </div>
   <div class="wrap">
     <div class="card">
@@ -33,11 +33,12 @@
             <option value="all" {% if kind == "all" %}selected{% endif %}>全部</option>
             <option value="diagnosis" {% if kind == "diagnosis" %}selected{% endif %}>诊断</option>
             <option value="optimization" {% if kind == "optimization" %}selected{% endif %}>优化</option>
+            <option value="rag" {% if kind == "rag" %}selected{% endif %}>RAG</option>
           </select>
         </div>
         <div>
           <label>关键字（文件名）</label>
-          <input name="q" value="{{ keyword }}" placeholder="REQ-20260101 或 optimization_web">
+          <input name="q" value="{{ keyword }}" placeholder="REQ-20260101 或 rag_qa">
         </div>
         <div>
           <button type="submit">查询</button>
