@@ -98,7 +98,7 @@ python -m process_assistant.cli feedback --input examples/feedback_event.json
 - 建立“工艺参数快照”表（温度、浓度、湿度、设备状态），增强条件匹配精度。
 - 增加 A/B 反馈策略，在线更新规则权重。
 
-## 9. 本地 Web UI（现场入口）
+## 9. 本地 Web UI
 
 本地 Web 入口文件：`web_ui.py`
 
