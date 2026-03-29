@@ -82,7 +82,7 @@ python -m process_assistant.cli diagnose --input examples/diagnosis_request.json
 python -m process_assistant.cli optimize --excel "xxx.xlsx" --output reports/optimization_report.json
 python -m process_assistant.cli feedback --input examples/feedback_event.json
 ```
-2、转至 ## 9. 本地 Web UI（现场入口）
+2、[转至 9. 本地 Web UI](#9.-本地-web-ui)
 
 
 ## 7. 隐含假设与补全说明
