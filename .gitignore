@@ -27,6 +27,7 @@ htmlcov/
 reports/
 data/feedback_log.jsonl
 data/rag_index/
+data/rag_index_langchain/
 reference/*.xlsx
 
 # Environment files (secrets)

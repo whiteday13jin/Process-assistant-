@@ -10,6 +10,7 @@ from .document_loader import load_documents_from_dir
 from .embedder import build_client_from_env
 from .env_loader import load_project_env
 from .knowledge_base import append_feedback
+from .langchain_demo import LangChainRagDemo
 from .models import FeedbackEvent
 from .optimization_engine import OptimizationEngine
 from .rag_evaluator import RagEvaluator
@@ -86,6 +87,28 @@ def main() -> None:
     p_rag_eval.add_argument("--min-lexical-score", type=float, default=0.02, help="Evidence gate lexical score threshold")
     p_rag_eval.add_argument("--min-title-score", type=float, default=0.02, help="Evidence gate title score threshold")
     p_rag_eval.add_argument("--output", help="Optional output JSON path")
+
+    p_rag_build_lc = sub.add_parser("rag-build-lc", help="Build LangChain demo vector index")
+    p_rag_build_lc.add_argument("--docs-dir", default=str(_default_rag_docs_path()), help="RAG docs directory")
+    p_rag_build_lc.add_argument("--index-dir", default=str(_default_rag_lc_index_path()), help="LangChain demo index directory")
+    p_rag_build_lc.add_argument("--chunk-size", type=int, default=700, help="Chunk size in characters")
+    p_rag_build_lc.add_argument("--chunk-overlap", type=int, default=100, help="Overlap size in characters")
+    p_rag_build_lc.add_argument(
+        "--no-recursive",
+        action="store_true",
+        help="Do not recursively scan docs dir",
+    )
+    p_rag_build_lc.add_argument("--output", help="Optional output JSON path")
+
+    p_rag_ask_lc = sub.add_parser("rag-ask-lc", help="Ask question with LangChain demo RAG")
+    p_rag_ask_lc.add_argument("--index-dir", default=str(_default_rag_lc_index_path()), help="LangChain demo index directory")
+    p_rag_ask_lc.add_argument("--question", help="Question text")
+    p_rag_ask_lc.add_argument("--question-file", help="JSON file containing question")
+    p_rag_ask_lc.add_argument("--top-k", type=int, default=4, help="Top-k retrieved chunks")
+    p_rag_ask_lc.add_argument("--max-context-chunks", type=int, default=4, help="Max chunks for LLM context")
+    p_rag_ask_lc.add_argument("--temperature", type=float, default=0.1, help="LLM temperature")
+    p_rag_ask_lc.add_argument("--lambda-mult", type=float, default=0.55, help="MMR diversity factor")
+    p_rag_ask_lc.add_argument("--output", help="Optional output JSON path")
 
     args = parser.parse_args()
 
@@ -199,6 +222,40 @@ def main() -> None:
         _emit(report, args.output)
         return
 
+    if args.cmd == "rag-build-lc":
+        manifest = LangChainRagDemo.build(
+            args.docs_dir,
+            args.index_dir,
+            chunk_size=args.chunk_size,
+            chunk_overlap=args.chunk_overlap,
+            recursive=not args.no_recursive,
+        )
+        _emit(
+            {
+                "status": "ok",
+                "command": "rag-build-lc",
+                "index_dir": str(Path(args.index_dir).resolve()),
+                "manifest": manifest,
+            },
+            args.output,
+        )
+        return
+
+    if args.cmd == "rag-ask-lc":
+        question = _resolve_question(args.question, args.question_file)
+        demo = LangChainRagDemo(args.index_dir)
+        if not demo.is_ready():
+            raise RuntimeError(f"LangChain demo index is not ready: {Path(args.index_dir).resolve()}")
+        payload = demo.ask(
+            question,
+            top_k=args.top_k,
+            max_context_chunks=args.max_context_chunks,
+            temperature=args.temperature,
+            lambda_mult=args.lambda_mult,
+        )
+        _emit(payload, args.output)
+        return
+
 
 def _load_json(path: str) -> Any:
     with open(path, "r", encoding="utf-8-sig") as f:
@@ -263,6 +320,10 @@ def _default_rag_docs_path() -> Path:
 
 def _default_rag_index_path() -> Path:
     return Path(__file__).resolve().parents[1] / "data" / "rag_index"
+
+
+def _default_rag_lc_index_path() -> Path:
+    return Path(__file__).resolve().parents[1] / "data" / "rag_index_langchain"
 
 
 def _default_rag_eval_dataset_path() -> Path:

@@ -13,6 +13,7 @@ from process_assistant.diagnosis_engine import DiagnosisEngine
 from process_assistant.document_loader import load_documents_from_dir
 from process_assistant.embedder import build_client_from_env
 from process_assistant.env_loader import load_project_env
+from process_assistant.langchain_demo import LangChainRagDemo
 from process_assistant.optimization_engine import OptimizationEngine
 from process_assistant.rag_pipeline import RagPipeline
 from process_assistant.text_splitter import TextSplitter
@@ -26,6 +27,7 @@ KB_PATH = DATA_DIR / "knowledge_base.json"
 FEEDBACK_LOG_PATH = DATA_DIR / "feedback_log.jsonl"
 RAG_DOCS_DIR = DATA_DIR / "rag_docs"
 RAG_INDEX_DIR = DATA_DIR / "rag_index"
+RAG_LC_INDEX_DIR = DATA_DIR / "rag_index_langchain"
 
 LOGIN_USERNAME = "user"
 LOGIN_PASSWORD = "123"
@@ -149,6 +151,8 @@ def _report_kind(name: str) -> str:
         return "diagnosis"
     if name.startswith("optimization"):
         return "optimization"
+    if name.startswith("rag_lc"):
+        return "rag_lc"
     if name.startswith("rag"):
         return "rag"
     return "other"
@@ -203,6 +207,24 @@ def _rag_pipeline() -> RagPipeline:
     index = LocalVectorIndex.load(RAG_INDEX_DIR)
     client = build_client_from_env(require_chat_model=True)
     return RagPipeline(index=index, client=client)
+
+
+def _ensure_rag_lc_index(index_dir: Path) -> None:
+    demo = LangChainRagDemo(index_dir)
+    if demo.is_ready():
+        return
+    LangChainRagDemo.build(
+        RAG_DOCS_DIR,
+        index_dir,
+        chunk_size=700,
+        chunk_overlap=100,
+        recursive=True,
+    )
+
+
+def _rag_lc_demo() -> LangChainRagDemo:
+    _ensure_rag_lc_index(RAG_LC_INDEX_DIR)
+    return LangChainRagDemo(RAG_LC_INDEX_DIR)
 
 
 @app.before_request
@@ -380,6 +402,48 @@ def rag_submit():
             role=session.get("role", "leader"),
             username=session.get("username", "user"),
             error=f"RAG 查询失败: {exc}",
+            question=question,
+            top_k=top_k,
+            max_context_chunks=max_context_chunks,
+        )
+
+
+@app.get("/rag-lc")
+def rag_lc_form():
+    return render_template("rag_lc_form.html", role=session.get("role", "leader"), username=session.get("username", "user"))
+
+
+@app.post("/rag-lc")
+def rag_lc_submit():
+    question = request.form.get("question", "").strip()
+    top_k = int(request.form.get("top_k", "4"))
+    max_context_chunks = int(request.form.get("max_context_chunks", "4"))
+    if not question:
+        return render_template(
+            "rag_lc_form.html",
+            role=session.get("role", "leader"),
+            username=session.get("username", "user"),
+            error="请输入问题后再提交。",
+            question=question,
+            top_k=top_k,
+            max_context_chunks=max_context_chunks,
+        )
+    try:
+        payload = _rag_lc_demo().ask(
+            question,
+            top_k=top_k,
+            max_context_chunks=max_context_chunks,
+            temperature=0.1,
+            lambda_mult=0.55,
+        )
+        report_path = _write_report(payload, "rag_lc_qa")
+        return render_template("rag_lc_result.html", result=payload, report_path=str(report_path))
+    except Exception as exc:
+        return render_template(
+            "rag_lc_form.html",
+            role=session.get("role", "leader"),
+            username=session.get("username", "user"),
+            error=f"LangChain RAG 查询失败: {exc}",
             question=question,
             top_k=top_k,
             max_context_chunks=max_context_chunks,

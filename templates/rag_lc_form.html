@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LangChain 实验版问答</title>
+  <style>
+    :root {
+      --bg: #fbf7f1;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5ded3;
+      --primary: #b45309;
+      --primary-soft: #fff7ed;
+      --danger-bg: #fef2f2;
+      --danger-text: #b42318;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #fffaf3 0%, var(--bg) 58%);
+      color: var(--text);
+      font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "Microsoft YaHei", serif;
+      line-height: 1.75;
+    }
+    .nav {
+      background:#2b2118;
+      color:#fff;
+      padding:12px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .nav a { color:#fde68a; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:980px; margin:24px auto; padding:0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow:0 10px 28px rgba(67, 56, 32, 0.06);
+      margin-bottom: 12px;
+    }
+    .tag {
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      font-size:12px;
+      font-weight:700;
+      margin-bottom:10px;
+    }
+    textarea, input {
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d6d3d1;
+      border-radius:12px;
+      padding:10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      background:#fffdfa;
+    }
+    textarea { min-height:130px; resize: vertical; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+    .btn {
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      background:var(--primary);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:14px;
+    }
+    .err {
+      background:var(--danger-bg);
+      color:var(--danger-text);
+      border:1px solid #fecaca;
+      border-radius:10px;
+      padding:10px;
+      margin-top:10px;
+    }
+    .hint { color:var(--muted); }
+    code { background:#f5f5f4; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>LangChain 实验版问答</div>
+    <div><a href="/rag">正式版 RAG</a> <a href="/history">历史记录</a> <a href="/role">角色页</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="tag">旁路 Demo</div>
+      <h2>LangChain 对照版知识问答</h2>
+      <p class="hint">这条链路专门用于展示 LangChain 的标准组件组合：<code>Splitter → Embeddings → FAISS → Retriever → Prompt → LLM</code>。首次访问若索引不存在，会自动基于 <code>data/rag_docs</code> 构建 LangChain 演示索引。</p>
+      <form method="post" action="/rag-lc">
+        <label>问题</label>
+        <textarea name="question" placeholder="例如：焊接不实一般优先排查哪些因素？">{{ question or '' }}</textarea>
+        <div class="grid">
+          <div>
+            <label>Top-K 检索</label>
+            <input name="top_k" type="number" min="1" max="10" value="{{ top_k or 4 }}">
+          </div>
+          <div>
+            <label>上下文片段数</label>
+            <input name="max_context_chunks" type="number" min="1" max="10" value="{{ max_context_chunks or 4 }}">
+          </div>
+        </div>
+        <button class="btn" type="submit">执行 LangChain 查询</button>
+      </form>
+      {% if error %}
+      <div class="err">{{ error }}</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
