@@ -362,8 +362,13 @@ def rag_submit():
             question,
             top_k=top_k,
             max_context_chunks=max_context_chunks,
-            hybrid_alpha=0.82,
+            vector_weight=0.70,
+            lexical_weight=0.20,
+            title_weight=0.10,
             max_per_doc=2,
+            min_final_score=0.42,
+            min_lexical_score=0.02,
+            min_title_score=0.02,
             temperature=0.1,
         )
         payload = RagPipeline.to_payload(answer)

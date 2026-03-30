@@ -116,6 +116,19 @@
     </div>
 
     <div class="card">
+      <h3>检索解释</h3>
+      <div class="meta">重写查询：{{ result.query_rewrite.retrieval_query if result.query_rewrite else result.question }}</div>
+      <div class="meta">匹配概念：{{ (result.query_rewrite.matched_concepts | join('、')) if result.query_rewrite and result.query_rewrite.matched_concepts else '无' }}</div>
+      <div class="meta">打分公式：{{ result.retrieval_policy.formula if result.retrieval_policy else 'N/A' }}</div>
+      {% if result.retrieval_policy %}
+      <div class="meta">权重：vector={{ result.retrieval_policy.vector_weight }}, lexical={{ result.retrieval_policy.lexical_weight }}, title={{ result.retrieval_policy.title_weight }}</div>
+      {% endif %}
+      {% if result.evidence %}
+      <div class="meta">证据门控：top_final={{ result.evidence.top_final_score }}, top_lexical={{ result.evidence.top_lexical_score }}, top_title={{ result.evidence.top_title_score }}, sufficient={{ result.evidence.is_sufficient }}</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
       <h3>回答</h3>
       <div class="answer">{{ result.answer }}</div>
     </div>

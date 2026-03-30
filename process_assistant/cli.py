@@ -57,8 +57,14 @@ def main() -> None:
     p_rag_ask.add_argument("--question-file", help="JSON file containing question")
     p_rag_ask.add_argument("--top-k", type=int, default=4, help="Top-k retrieved chunks")
     p_rag_ask.add_argument("--max-context-chunks", type=int, default=4, help="Max chunks for LLM context")
-    p_rag_ask.add_argument("--hybrid-alpha", type=float, default=0.82, help="Vector score weight in hybrid rerank")
+    p_rag_ask.add_argument("--hybrid-alpha", type=float, help="Legacy vector weight, kept for compatibility")
+    p_rag_ask.add_argument("--vector-weight", type=float, default=0.70, help="Vector score weight")
+    p_rag_ask.add_argument("--lexical-weight", type=float, default=0.20, help="Lexical score weight")
+    p_rag_ask.add_argument("--title-weight", type=float, default=0.10, help="Title/heading score weight")
     p_rag_ask.add_argument("--max-per-doc", type=int, default=2, help="Max retrieved chunks per document")
+    p_rag_ask.add_argument("--min-final-score", type=float, default=0.42, help="Evidence gate final score threshold")
+    p_rag_ask.add_argument("--min-lexical-score", type=float, default=0.02, help="Evidence gate lexical score threshold")
+    p_rag_ask.add_argument("--min-title-score", type=float, default=0.02, help="Evidence gate title score threshold")
     p_rag_ask.add_argument("--temperature", type=float, default=0.1, help="LLM temperature")
     p_rag_ask.add_argument("--output", help="Optional output JSON path")
 
@@ -71,8 +77,14 @@ def main() -> None:
     )
     p_rag_eval.add_argument("--top-k", type=int, default=4, help="Top-k retrieved chunks")
     p_rag_eval.add_argument("--max-context-chunks", type=int, default=4, help="Max chunks for LLM context")
-    p_rag_eval.add_argument("--hybrid-alpha", type=float, default=0.82, help="Vector score weight in hybrid rerank")
+    p_rag_eval.add_argument("--hybrid-alpha", type=float, help="Legacy vector weight, kept for compatibility")
+    p_rag_eval.add_argument("--vector-weight", type=float, default=0.70, help="Vector score weight")
+    p_rag_eval.add_argument("--lexical-weight", type=float, default=0.20, help="Lexical score weight")
+    p_rag_eval.add_argument("--title-weight", type=float, default=0.10, help="Title/heading score weight")
     p_rag_eval.add_argument("--max-per-doc", type=int, default=2, help="Max retrieved chunks per document")
+    p_rag_eval.add_argument("--min-final-score", type=float, default=0.42, help="Evidence gate final score threshold")
+    p_rag_eval.add_argument("--min-lexical-score", type=float, default=0.02, help="Evidence gate lexical score threshold")
+    p_rag_eval.add_argument("--min-title-score", type=float, default=0.02, help="Evidence gate title score threshold")
     p_rag_eval.add_argument("--output", help="Optional output JSON path")
 
     args = parser.parse_args()
@@ -133,6 +145,12 @@ def main() -> None:
 
     if args.cmd == "rag-ask":
         question = _resolve_question(args.question, args.question_file)
+        vector_weight, lexical_weight, title_weight = _resolve_retrieval_weights(
+            args.vector_weight,
+            args.lexical_weight,
+            args.title_weight,
+            args.hybrid_alpha,
+        )
         client = build_client_from_env(require_chat_model=True)
         index = LocalVectorIndex.load(args.index_dir)
         pipeline = RagPipeline(index=index, client=client)
@@ -140,8 +158,13 @@ def main() -> None:
             question,
             top_k=args.top_k,
             max_context_chunks=args.max_context_chunks,
-            hybrid_alpha=args.hybrid_alpha,
+            vector_weight=vector_weight,
+            lexical_weight=lexical_weight,
+            title_weight=title_weight,
             max_per_doc=args.max_per_doc,
+            min_final_score=args.min_final_score,
+            min_lexical_score=args.min_lexical_score,
+            min_title_score=args.min_title_score,
             temperature=args.temperature,
         )
         _emit(RagPipeline.to_payload(answer), args.output)
@@ -151,6 +174,12 @@ def main() -> None:
         dataset = _load_json(args.dataset)
         if not isinstance(dataset, list):
             raise ValueError("rag-eval dataset must be a JSON array")
+        vector_weight, lexical_weight, title_weight = _resolve_retrieval_weights(
+            args.vector_weight,
+            args.lexical_weight,
+            args.title_weight,
+            args.hybrid_alpha,
+        )
         client = build_client_from_env(require_chat_model=True)
         index = LocalVectorIndex.load(args.index_dir)
         pipeline = RagPipeline(index=index, client=client)
@@ -159,8 +188,13 @@ def main() -> None:
             dataset,
             top_k=args.top_k,
             max_context_chunks=args.max_context_chunks,
-            hybrid_alpha=args.hybrid_alpha,
+            vector_weight=vector_weight,
+            lexical_weight=lexical_weight,
+            title_weight=title_weight,
             max_per_doc=args.max_per_doc,
+            min_final_score=args.min_final_score,
+            min_lexical_score=args.min_lexical_score,
+            min_title_score=args.min_title_score,
         )
         _emit(report, args.output)
         return
@@ -183,6 +217,22 @@ def _resolve_question(raw_question: str | None, question_file: str | None) -> st
             return payload.strip()
         raise ValueError("question file must contain JSON object with `question` or plain JSON string")
     raise ValueError("missing question. pass --question or --question-file")
+
+
+def _resolve_retrieval_weights(
+    vector_weight: float,
+    lexical_weight: float,
+    title_weight: float,
+    hybrid_alpha: float | None,
+) -> tuple[float, float, float]:
+    if hybrid_alpha is None:
+        return vector_weight, lexical_weight, title_weight
+    alpha = float(hybrid_alpha)
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("hybrid-alpha must be within [0, 1]")
+    remain = 1.0 - alpha
+    # Keep backward behavior: all non-vector share remaining score.
+    return alpha, remain * 0.67, remain * 0.33
 
 
 def _emit(payload: Any, output: str | None) -> None:

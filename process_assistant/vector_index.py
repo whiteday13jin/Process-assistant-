@@ -21,6 +21,8 @@ class LocalVectorIndex:
         self.vectors = _to_float32(vectors)
         self.manifest = manifest
         self._norm_vectors = _normalize(self.vectors)
+        self._chunk_text_terms = [_terms(c.text) for c in chunks]
+        self._chunk_title_terms = [_terms(" ".join([c.title, *c.heading_path])) for c in chunks]
 
     @classmethod
     def build(
@@ -98,13 +100,23 @@ class LocalVectorIndex:
         top_k: int = 4,
         *,
         query_text: str | None = None,
-        hybrid_alpha: float = 0.82,
+        vector_weight: float = 0.70,
+        lexical_weight: float = 0.20,
+        title_weight: float = 0.10,
         max_per_doc: int | None = 2,
     ) -> List[RetrievedChunk]:
         if top_k < 1:
             raise ValueError("top_k must be >= 1")
-        if not 0.0 <= hybrid_alpha <= 1.0:
-            raise ValueError("hybrid_alpha must be within [0, 1]")
+        if vector_weight < 0 or lexical_weight < 0 or title_weight < 0:
+            raise ValueError("retrieval weights must be >= 0")
+        weight_sum = vector_weight + lexical_weight + title_weight
+        if weight_sum <= 0:
+            raise ValueError("retrieval weights sum must be > 0")
+        vector_weight, lexical_weight, title_weight = (
+            vector_weight / weight_sum,
+            lexical_weight / weight_sum,
+            title_weight / weight_sum,
+        )
         q = np.asarray(list(query_vector), dtype=np.float32)
         if q.ndim != 1:
             raise ValueError("query vector must be 1D")
@@ -115,14 +127,20 @@ class LocalVectorIndex:
 
         q = _normalize(q.reshape(1, -1))[0]
         vector_scores = np.dot(self._norm_vectors, q)
-        final_scores = vector_scores.copy()
         lexical_scores = np.zeros_like(vector_scores)
+        title_scores = np.zeros_like(vector_scores)
+        final_scores = vector_scores.copy()
         if query_text:
             query_terms = _terms(query_text)
             if query_terms:
-                for i, chunk in enumerate(self.chunks):
-                    lexical_scores[i] = _lexical_overlap(query_terms, _terms(chunk.text))
-                final_scores = hybrid_alpha * vector_scores + (1.0 - hybrid_alpha) * lexical_scores
+                for i in range(len(self.chunks)):
+                    lexical_scores[i] = _lexical_overlap(query_terms, self._chunk_text_terms[i])
+                    title_scores[i] = _lexical_overlap(query_terms, self._chunk_title_terms[i])
+                final_scores = (
+                    vector_weight * vector_scores
+                    + lexical_weight * lexical_scores
+                    + title_weight * title_scores
+                )
 
         # Retrieve a wider pool first, then apply diversity control.
         candidate_k = min(max(top_k * 4, 20), len(self.chunks))
@@ -153,6 +171,12 @@ class LocalVectorIndex:
                     score=round(score, 6),
                     text=chunk.text,
                     heading_path=list(chunk.heading_path),
+                    score_breakdown={
+                        "vector": round(float(vector_scores[int(idx)]), 6),
+                        "lexical": round(float(lexical_scores[int(idx)]), 6),
+                        "title": round(float(title_scores[int(idx)]), 6),
+                        "final": round(score, 6),
+                    },
                     metadata=dict(chunk.metadata),
                 )
             )

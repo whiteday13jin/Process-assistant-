@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from statistics import mean
 from typing import Any, Dict, List
@@ -24,8 +24,13 @@ class RagEvaluator:
         *,
         top_k: int = 4,
         max_context_chunks: int = 4,
-        hybrid_alpha: float = 0.82,
+        vector_weight: float = 0.70,
+        lexical_weight: float = 0.20,
+        title_weight: float = 0.10,
         max_per_doc: int = 2,
+        min_final_score: float = 0.42,
+        min_lexical_score: float = 0.02,
+        min_title_score: float = 0.02,
     ) -> Dict[str, Any]:
         if not dataset:
             raise ValueError("evaluation dataset is empty")
@@ -47,8 +52,13 @@ class RagEvaluator:
                 question,
                 top_k=top_k,
                 max_context_chunks=max_context_chunks,
-                hybrid_alpha=hybrid_alpha,
+                vector_weight=vector_weight,
+                lexical_weight=lexical_weight,
+                title_weight=title_weight,
                 max_per_doc=max_per_doc,
+                min_final_score=min_final_score,
+                min_lexical_score=min_lexical_score,
+                min_title_score=min_title_score,
                 temperature=0.0,
             )
             answer_payload = self.pipeline.to_payload(answer)

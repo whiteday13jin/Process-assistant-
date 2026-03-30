@@ -39,6 +39,7 @@ class RetrievedChunk:
     score: float
     text: str
     heading_path: List[str] = field(default_factory=list)
+    score_breakdown: Dict[str, float] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -61,4 +62,6 @@ class RagAnswer:
     retrieved_chunks: List[RetrievedChunk]
     engine: str
     model: str
-
+    query_rewrite: Dict[str, Any] = field(default_factory=dict)
+    retrieval_policy: Dict[str, Any] = field(default_factory=dict)
+    evidence: Dict[str, Any] = field(default_factory=dict)
