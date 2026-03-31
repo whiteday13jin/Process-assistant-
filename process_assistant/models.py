@@ -1,5 +1,12 @@
 ﻿from __future__ import annotations
 
+"""结构化决策层的数据模型。
+
+这一组 dataclass 主要服务于原有的诊断、优化和反馈闭环，
+作用是把 JSON、Excel 等松散输入收口成可校验、可推理的稳定对象。
+如果把项目看成一条生产链，这里就是所有上游数据进入业务逻辑前的“统一语言”。
+"""
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from statistics import mean, pstdev
@@ -7,11 +14,13 @@ from typing import Any, Dict, List, Optional
 
 
 class ValidationError(ValueError):
-    """Raised when an input payload violates schema constraints."""
+    """输入数据不符合要求时抛出，通常是缺字段、字段类型错误或值域错误。"""
 
 
 @dataclass(frozen=True)
 class Process:
+
+
     id: str
     route_id: str
     sequence: int
@@ -22,6 +31,8 @@ class Process:
 
 @dataclass(frozen=True)
 class Symptom:
+  
+
     id: str
     code: str
     name: str
@@ -30,6 +41,8 @@ class Symptom:
 
 @dataclass(frozen=True)
 class Cause:
+
+
     id: str
     name: str
     category: str
@@ -41,6 +54,8 @@ class Cause:
 
 @dataclass(frozen=True)
 class Solution:
+
+
     id: str
     cause_id: str
     actions: List[str]
@@ -51,6 +66,8 @@ class Solution:
 
 @dataclass(frozen=True)
 class Case:
+    """历史案例，给诊断结果提供参考。"""
+
     id: str
     process_id: str
     symptom_ids: List[str]
@@ -61,6 +78,8 @@ class Case:
 
 @dataclass(frozen=True)
 class ProcessTime:
+    """从节拍分析表中提取出的单条工序统计记录。"""
+
     source_file: str
     sheet_name: str
     section: str
@@ -82,6 +101,8 @@ class ProcessTime:
 
 @dataclass(frozen=True)
 class FeedbackEvent:
+    """现场执行后的反馈事件，用于校正知识库效果。"""
+
     request_id: str
     cause_id: str
     solution_id: str
@@ -90,6 +111,8 @@ class FeedbackEvent:
 
     @staticmethod
     def from_payload(payload: Dict[str, Any]) -> "FeedbackEvent":
+       
+
         required = {"request_id", "cause_id", "solution_id", "result"}
         allowed = required | {"created_at"}
         _validate_keys(payload, required, allowed, "feedback")
@@ -107,6 +130,8 @@ class FeedbackEvent:
 
 @dataclass(frozen=True)
 class DiagnosisRequest:
+   
+
     request_id: str
     process_id: str
     symptom_ids: List[str]
@@ -115,6 +140,8 @@ class DiagnosisRequest:
 
     @staticmethod
     def from_payload(payload: Dict[str, Any]) -> "DiagnosisRequest":
+        """校验并标准化诊断请求。"""
+
         required = {"request_id", "process_id", "symptom_ids", "observed"}
         allowed = required | {"top_k"}
         _validate_keys(payload, required, allowed, "diagnosis_request")
@@ -142,6 +169,8 @@ class DiagnosisRequest:
 
 @dataclass(frozen=True)
 class CauseCandidate:
+    """诊断排序阶段的中间结果，记录一个候选原因及其证据轨迹。"""
+
     cause_id: str
     score: float
     traces: List[Dict[str, Any]]
@@ -149,6 +178,8 @@ class CauseCandidate:
 
 @dataclass(frozen=True)
 class ProcessStats:
+    """面向优化分析的工序统计摘要。"""
+
     process_id: str
     process_name: str
     samples: int
@@ -161,6 +192,8 @@ class ProcessStats:
 
 
 def stats_from_records(process_id: str, process_name: str, records: List[ProcessTime]) -> ProcessStats:
+    """把同一工序的多条时序记录汇总成统计特征。"""
+
     ct_values = [x.ct_sec for x in records if x.ct_sec is not None]
     ect_values = [x.ect_sec for x in records if x.ect_sec is not None]
 
@@ -178,6 +211,8 @@ def stats_from_records(process_id: str, process_name: str, records: List[Process
 
 
 def _validate_keys(payload: Dict[str, Any], required: set[str], allowed: set[str], obj_name: str) -> None:
+    """统一检查缺字段和多字段，避免每个模型重复写样板校验。"""
+
     missing = required - payload.keys()
     if missing:
         raise ValidationError(f"{obj_name}: missing keys {sorted(missing)}")

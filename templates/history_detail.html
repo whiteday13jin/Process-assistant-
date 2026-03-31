@@ -1,0 +1,117 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>业务详情</title>
+  <style>
+    :root {
+      --bg:#eef3f8;
+      --card:#ffffff;
+      --text:#122033;
+      --muted:#667085;
+      --line:#e8edf5;
+      --brand:#1954d1;
+      --soft:#f8fbff;
+    }
+    body { font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:linear-gradient(180deg,#eef3f8 0%,#f7fbff 100%); margin:0; color:var(--text); }
+    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
+    .wrap { max-width:1080px; margin:24px auto; padding:0 16px; }
+    .card { background:var(--card); border-radius:16px; padding:22px; box-shadow:0 12px 28px rgba(16,24,40,.08); margin-bottom:14px; }
+    .title { margin:0 0 8px; font-size:28px; }
+    .subtitle { color:var(--muted); line-height:1.7; }
+    .meta-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px 18px; margin-top:18px; }
+    .meta-item { padding:12px 14px; border-radius:14px; background:var(--soft); border:1px solid var(--line); }
+    .meta-item strong { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .section-title { margin:0 0 12px; font-size:20px; }
+    .text-block { background:var(--soft); border:1px solid var(--line); border-radius:14px; padding:16px; line-height:1.8; white-space:pre-wrap; }
+    .detail-grid { display:grid; gap:12px; }
+    .detail-card { border:1px solid var(--line); border-radius:14px; padding:16px; background:#fcfdff; }
+    .detail-card h4 { margin:0 0 8px; font-size:18px; }
+    .detail-meta { color:var(--muted); font-size:14px; margin-bottom:10px; }
+    ul { margin:0; padding-left:20px; line-height:1.8; }
+    .actions { display:flex; justify-content:flex-end; gap:12px; }
+    .btn { display:inline-block; text-decoration:none; border-radius:10px; padding:10px 14px; font-weight:700; }
+    .btn-light { background:#eef4ff; color:#1d4ed8; }
+    .btn-dark { background:#111827; color:#fff; }
+    @media (max-width: 800px) {
+      .meta-grid { grid-template-columns:1fr; }
+      .actions { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div>业务详情</div>
+    <div><a href="/history">返回历史</a> <a href="/role">角色页</a> <a href="/logout">退出</a></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <h2 class="title">{{ detail.title }}</h2>
+      <p class="subtitle">类型：{{ report_kind }} · 文件：{{ report_name }}</p>
+      {% if detail.header_lines %}
+      <div class="meta-grid">
+        {% for item in detail.header_lines %}
+        <div class="meta-item">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.value }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% for section in detail.sections %}
+    <div class="card">
+      <h3 class="section-title">{{ section.title }}</h3>
+      {% if section.text %}
+      <div class="text-block">{{ section.text }}</div>
+      {% endif %}
+
+      {% if section.pairs %}
+      <div class="meta-grid">
+        {% for item in section.pairs %}
+        <div class="meta-item">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.value }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if section.cards %}
+      <div class="detail-grid">
+        {% for item in section.cards %}
+        <div class="detail-card">
+          <h4>{{ item.title }}</h4>
+          <div class="detail-meta">{{ item.meta }}</div>
+          {% if item.bullets %}
+          <ul>
+            {% for bullet in item.bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% if item.checks %}
+          <div class="detail-meta" style="margin-top:10px;">检查点</div>
+          <ul>
+            {% for check in item.checks %}
+            <li>{{ check }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="actions">
+      <a class="btn btn-light" href="/history">返回历史页</a>
+      <a class="btn btn-dark" href="/history/view?name={{ report_name }}">查看技术详细报告</a>
+    </div>
+  </div>
+</body>
+</html>

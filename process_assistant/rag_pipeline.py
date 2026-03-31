@@ -1,4 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
+"""自研版 RAG 主流程。
+
+这是项目里“文档问答正式版”的核心文件。
+和 LangChain 对照版相比，这里更强调我们对检索和回答链路的控制能力。
+"""
 
 import re
 from dataclasses import asdict
@@ -11,6 +17,8 @@ from .vector_index import LocalVectorIndex
 
 
 class RagPipeline:
+    """自研版 RAG 主类。"""
+
     def __init__(self, index: LocalVectorIndex, client: OpenAICompatibleClient) -> None:
         self.index = index
         self.client = client
@@ -31,12 +39,17 @@ class RagPipeline:
         min_title_score: float = 0.02,
         temperature: float = 0.1,
     ) -> RagAnswer:
+        """执行一次自研版 RAG 问答。
+
+        主流程：清洗问题 -> 查询归一化 -> 检索与重排 -> 证据门控 -> 生成答案或拒答。
+        """
         question = question.strip()
         if not question:
             raise ValueError("question is empty")
         if max_context_chunks < 1:
             raise ValueError("max_context_chunks must be >= 1")
 
+        # 先做查询归一化，让“假焊 / 虚焊 / 焊接不实”这类现场说法能命中同一类知识。
         rewrite = rewrite_query(question)
         qvec = self.client.embed_texts([rewrite.retrieval_query], batch_size=1)[0]
         retrieved = self.index.search(
@@ -51,6 +64,7 @@ class RagPipeline:
         context_chunks = retrieved[: max_context_chunks]
         citations = _build_citations(context_chunks)
 
+        # 检索结果不直接喂给模型，而是先做证据门控，减少“证据很弱却硬答”的情况。
         evidence = _evaluate_evidence(
             context_chunks,
             min_final_score=min_final_score,
@@ -98,6 +112,7 @@ class RagPipeline:
         *,
         temperature: float,
     ) -> str:
+        """用检索到的片段生成最终答案。"""
         if not context_chunks:
             return "未检索到可用知识片段，当前无法基于知识库给出可靠答案。"
 
@@ -119,12 +134,14 @@ class RagPipeline:
             )
         sources_text = "\n\n".join(source_blocks)
 
+        # system prompt 主要负责“约束边界”。
         system_prompt = (
             "你是工艺知识问答助手。"
             "只允许依据提供的来源内容回答，不得编造参数、规范或结论。"
             "仅当问题主干无法回答时，才写‘依据不足’，否则不要出现该词。"
             "回答中请使用 [1] [2] 这样的引用编号指向来源。"
         )
+        # user prompt 主要负责“规定输出格式”。
         user_prompt = (
             f"问题：{question}\n\n"
             f"可用来源如下：\n{sources_text}\n\n"
@@ -151,6 +168,7 @@ class RagPipeline:
 
     @staticmethod
     def _insufficient_evidence_answer(citations: List[Citation], evidence: Dict[str, float | bool]) -> str:
+        """证据不足时的统一回答模板。"""
         if citations:
             refs = " ".join(c.ref_id for c in citations)
             return (
@@ -175,6 +193,7 @@ class RagPipeline:
 
 
 def _build_citations(chunks: List[RetrievedChunk]) -> List[Citation]:
+    """把检索片段转换成前端和报告可直接消费的引用对象。"""
     citations: List[Citation] = []
     for idx, chunk in enumerate(chunks, start=1):
         quote = _clip(chunk.text, 180)
@@ -204,6 +223,7 @@ def _contains_reference_marker(text: str) -> bool:
 
 
 def _clean_answer_text(text: str) -> str:
+    """清理模型输出里的多余符号和换行噪声。"""
     cleaned = text.replace("\r\n", "\n")
     cleaned = re.sub(r"[✅❌⚠️⭐✨•●■□▶►▪️]", "", cleaned)
     cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
@@ -218,6 +238,7 @@ def _evaluate_evidence(
     min_lexical_score: float,
     min_title_score: float,
 ) -> Dict[str, float | bool]:
+    """评估当前检索证据是否足以支撑回答。"""
     if not chunks:
         return {
             "is_sufficient": False,

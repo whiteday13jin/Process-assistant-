@@ -1,20 +1,50 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>异常诊断</title>
   <style>
-    body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
-    .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
+    :root {
+      --bg:#eef3f8;
+      --card:#ffffff;
+      --text:#122033;
+      --muted:#5f6f82;
+      --line:#d6deea;
+      --brand:#1954d1;
+      --brand-soft:#e8f0ff;
+      --danger:#b42318;
+    }
+    body { font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:linear-gradient(180deg,#eef3f8 0%,#f8fbff 100%); margin:0; color:var(--text); }
+    .nav { background:#101828; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; gap:12px; }
     .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
-    .wrap { max-width:920px; margin:24px auto; padding:0 16px; }
-    .card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
-    label { display:block; margin:12px 0 6px; font-weight:600; }
-    input { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:8px; padding:10px; }
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    button { margin-top:18px; border:none; border-radius:8px; padding:12px 16px; background:#2563eb; color:#fff; font-weight:700; cursor:pointer; }
-    .hint { color:#475467; font-size:14px; }
+    .wrap { max-width:1060px; margin:24px auto; padding:0 16px; }
+    .card { background:var(--card); border-radius:16px; padding:24px; box-shadow:0 14px 32px rgba(16,24,40,.08); }
+    .hero { margin-bottom:16px; }
+    .hero h2 { margin:0 0 8px; font-size:28px; }
+    .hero p { margin:0; color:var(--muted); line-height:1.7; }
+    .error { margin:0 0 16px; padding:12px 14px; border-radius:12px; background:#fef3f2; color:var(--danger); border:1px solid #fecdca; }
+    label { display:block; margin:12px 0 6px; font-weight:700; }
+    input, select { width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; background:#fff; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .section { margin-top:20px; padding-top:18px; border-top:1px solid #edf2f7; }
+    .section h3 { margin:0 0 10px; font-size:18px; }
+    .section-note { color:var(--muted); font-size:14px; line-height:1.7; margin-bottom:10px; }
+    .summary { background:var(--brand-soft); color:#17409c; border:1px solid #c7d7ff; padding:12px 14px; border-radius:12px; line-height:1.7; }
+    .symptom-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+    .symptom-item { border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; align-items:flex-start; gap:10px; background:#fbfdff; }
+    .symptom-item input { width:auto; margin-top:2px; }
+    .symptom-name { font-weight:700; }
+    .symptom-meta { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+    .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .field-card { border:1px solid #e7edf5; border-radius:14px; padding:14px; background:#fcfdff; }
+    .field-help { color:var(--muted); font-size:12px; margin-top:6px; line-height:1.6; }
+    .field-unit { color:var(--muted); font-size:12px; margin-top:6px; }
+    button { margin-top:24px; border:none; border-radius:12px; padding:14px 18px; background:var(--brand); color:#fff; font-weight:700; cursor:pointer; }
+    .tiny { color:var(--muted); font-size:13px; }
+    @media (max-width: 768px) {
+      .row, .field-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -24,46 +54,164 @@
   </div>
   <div class="wrap">
     <div class="card">
-      <h2>班组长诊断表单</h2>
-      <p class="hint">输入越完整，建议排序越精准；不确定可填 `unknown`。</p>
+      <div class="hero">
+        <h2>工序化异常诊断表单</h2>
+        <p>先选择工序，再按该工序的常见异常和关键参数填写。这样输入更贴近现场，也能避免无关字段长期常驻。</p>
+      </div>
+
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+
       <form method="post" action="/diagnose">
-        <label>问题编号（可空）</label>
-        <input name="request_id" placeholder="REQ-20260101-001">
         <div class="row">
           <div>
-            <label>工序（Pxx 或 中文）</label>
-            <input name="process" placeholder="焊锡 / P10">
+            <label>问题编号（可空）</label>
+            <input name="request_id" value="{{ form_state.request_id }}" placeholder="REQ-20260331-001">
           </div>
           <div>
-            <label>症状（逗号分隔）</label>
-            <input name="symptoms" placeholder="焊盘开口,虚焊">
+            <label>返回候选数量 top_k</label>
+            <input name="top_k" value="{{ form_state.top_k }}">
           </div>
         </div>
-        <div class="row">
-          <div>
-            <label>不良率</label>
-            <input name="defect_rate" placeholder="3% 或 0.03">
-          </div>
-          <div>
-            <label>湿度</label>
-            <input name="humidity" placeholder="58 或 unknown">
-          </div>
+
+        <div class="section">
+          <h3>1. 选择工序</h3>
+          <p class="section-note">当前只展示该工序真正相关的异常项和参数项。</p>
+          <label>工序</label>
+          <select id="process_id" name="process_id">
+            {% for process in diagnosis_assets.processes %}
+            <option value="{{ process.id }}" {% if process.id == form_state.process_id %}selected{% endif %}>{{ process.id }} · {{ process.name }}（{{ process.stage }}）</option>
+            {% endfor %}
+          </select>
+          <div id="process_summary" class="summary" style="margin-top:12px;"></div>
         </div>
-        <div class="row">
-          <div>
-            <label>助焊剂在岗时长（小时）</label>
-            <input name="flux_age_hours" placeholder="1.5">
-          </div>
-          <div>
-            <label>炉温波动</label>
-            <input name="oven_temp_delta" placeholder="330+-10℃ 或 10">
-          </div>
+
+        <div class="section">
+          <h3>2. 选择异常现象</h3>
+          <p class="section-note">这里的异常项会根据工序自动切换。</p>
+          <div id="symptom_container" class="symptom-grid"></div>
         </div>
-        <label>返回候选数量 top_k</label>
-        <input name="top_k" value="3">
+
+        <div class="section">
+          <h3>3. 填写观测参数</h3>
+          <p class="section-note">这里只展示该工序常用的现场观测参数，留空表示当前未知。</p>
+          <div id="field_container" class="field-grid"></div>
+        </div>
+
         <button type="submit">开始诊断</button>
+        <p class="tiny">提示：结构化诊断依赖样本知识库，参数越贴近现场，结果越稳定。</p>
       </form>
     </div>
   </div>
+
+  <script>
+    const diagnosisAssets = {{ diagnosis_assets|tojson }};
+    const formState = {{ form_state|tojson }};
+
+    const processSelect = document.getElementById("process_id");
+    const summaryBox = document.getElementById("process_summary");
+    const symptomContainer = document.getElementById("symptom_container");
+    const fieldContainer = document.getElementById("field_container");
+
+    function renderProcessView() {
+      const processId = processSelect.value;
+      const template = diagnosisAssets.templates[processId];
+      const process = diagnosisAssets.processes.find(item => item.id === processId);
+      if (!template || !process) {
+        summaryBox.textContent = "未找到当前工序的模板配置。";
+        symptomContainer.innerHTML = "";
+        fieldContainer.innerHTML = "";
+        return;
+      }
+
+      summaryBox.textContent = `${process.name}：${template.summary}`;
+      renderSymptoms(template, formState.symptom_ids || []);
+      renderFields(template, formState.observed || {});
+    }
+
+    function renderSymptoms(template, selectedSymptoms) {
+      const selected = new Set(selectedSymptoms || []);
+      symptomContainer.innerHTML = "";
+      for (const symptomId of template.symptom_ids) {
+        const symptom = diagnosisAssets.symptoms[symptomId];
+        if (!symptom) continue;
+        const wrapper = document.createElement("label");
+        wrapper.className = "symptom-item";
+        wrapper.innerHTML = `
+          <input type="checkbox" name="symptom_ids" value="${symptom.id}" ${selected.has(symptom.id) ? "checked" : ""}>
+          <span>
+            <span class="symptom-name">${symptom.name}</span>
+            <span class="symptom-meta">${symptom.id} · 严重度 ${symptom.severity}</span>
+          </span>
+        `;
+        symptomContainer.appendChild(wrapper);
+      }
+    }
+
+    function renderFields(template, observed) {
+      fieldContainer.innerHTML = "";
+      for (const field of template.fields) {
+        const value = observed[field.key] ?? "";
+        const card = document.createElement("div");
+        card.className = "field-card";
+
+        const label = document.createElement("label");
+        label.textContent = field.label;
+        label.style.marginTop = "0";
+        card.appendChild(label);
+
+        let input;
+        if (field.input_type === "select") {
+          input = document.createElement("select");
+          input.name = field.key;
+          const blank = document.createElement("option");
+          blank.value = "";
+          blank.textContent = "请选择";
+          input.appendChild(blank);
+          for (const option of field.options || []) {
+            const item = document.createElement("option");
+            item.value = option;
+            item.textContent = option;
+            if (String(value) === option) {
+              item.selected = true;
+            }
+            input.appendChild(item);
+          }
+        } else {
+          input = document.createElement("input");
+          input.name = field.key;
+          input.type = field.input_type === "number" ? "number" : "text";
+          input.step = "any";
+          input.placeholder = field.placeholder || "";
+          input.value = value;
+        }
+        card.appendChild(input);
+
+        if (field.help_text) {
+          const help = document.createElement("div");
+          help.className = "field-help";
+          help.textContent = field.help_text;
+          card.appendChild(help);
+        }
+        if (field.unit) {
+          const unit = document.createElement("div");
+          unit.className = "field-unit";
+          unit.textContent = `单位：${field.unit}`;
+          card.appendChild(unit);
+        }
+        fieldContainer.appendChild(card);
+      }
+    }
+
+    processSelect.addEventListener("change", () => {
+      formState.process_id = processSelect.value;
+      formState.symptom_ids = [];
+      formState.observed = {};
+      renderProcessView();
+    });
+
+    renderProcessView();
+  </script>
 </body>
 </html>

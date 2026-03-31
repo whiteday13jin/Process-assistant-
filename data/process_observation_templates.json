@@ -1,0 +1,128 @@
+﻿{
+  "P01": {
+    "summary": "用于 PI 膜来料与下料首检，重点关注尺寸波动、划伤污染和孔位偏移风险。",
+    "symptom_ids": ["S10", "S14", "S15", "S16"],
+    "fields": [
+      {"key": "incoming_width_delta_mm", "label": "来料尺寸偏差", "input_type": "number", "parser": "float", "placeholder": "0.25", "help_text": "相对规格的宽度偏差", "unit": "mm"},
+      {"key": "scratch_length_mm", "label": "划伤长度", "input_type": "number", "parser": "float", "placeholder": "6", "help_text": "单处最明显划伤长度", "unit": "mm"},
+      {"key": "surface_cleanliness", "label": "表面洁净度", "input_type": "select", "parser": "select", "options": ["良好", "一般", "差"], "help_text": "来料是否带油污、粉尘或压痕"}
+    ]
+  },
+  "P02": {
+    "summary": "导电浆料印刷工序常看浆料状态、网版张力、刮刀压力与环境湿度。",
+    "symptom_ids": ["S01", "S02", "S03", "S04", "S10", "S11"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "3% 或 0.03", "help_text": "当前批次主要异常占比"},
+      {"key": "paste_viscosity", "label": "浆料粘度", "input_type": "number", "parser": "float", "placeholder": "17500", "unit": "cP"},
+      {"key": "screen_tension", "label": "网版张力", "input_type": "number", "parser": "float", "placeholder": "17.5", "unit": "N/cm"},
+      {"key": "scraper_pressure", "label": "刮刀压力", "input_type": "number", "parser": "float", "placeholder": "0.32", "unit": "MPa"},
+      {"key": "ambient_humidity", "label": "环境湿度", "input_type": "number", "parser": "float", "placeholder": "62", "unit": "%RH"}
+    ]
+  },
+  "P03": {
+    "summary": "烘烤固化重点关注炉温波动、预烘烤时长与材料含水率。",
+    "symptom_ids": ["S03", "S04", "S05", "S06", "S16"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "2.5% 或 0.025"},
+      {"key": "oven_temp_delta", "label": "炉温波动", "input_type": "number", "parser": "float", "placeholder": "9", "unit": "℃"},
+      {"key": "prebake_time_min", "label": "预烘烤时长", "input_type": "number", "parser": "float", "placeholder": "15", "unit": "min"},
+      {"key": "humidity", "label": "材料/环境湿度", "input_type": "number", "parser": "float", "placeholder": "58", "unit": "%RH"}
+    ]
+  },
+  "P04": {
+    "summary": "曝光对位工序需要关注曝光能量、Mark 状态和基材尺寸补偿。",
+    "symptom_ids": ["S01", "S10", "S11", "S15"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "3% 或 0.03"},
+      {"key": "exposure_energy", "label": "曝光能量", "input_type": "number", "parser": "float", "placeholder": "95", "unit": "%"},
+      {"key": "mark_offset_mm", "label": "Mark 偏差", "input_type": "number", "parser": "float", "placeholder": "0.06", "unit": "mm"},
+      {"key": "substrate_expansion_mm", "label": "基材尺寸漂移", "input_type": "number", "parser": "float", "placeholder": "0.10", "unit": "mm"}
+    ]
+  },
+  "P05": {
+    "summary": "显影/蚀刻工序主要看药液浓度、显影时间、喷淋压力和基材热补偿。",
+    "symptom_ids": ["S01", "S02", "S03", "S04", "S11", "S12", "S15", "S17"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "4% 或 0.04"},
+      {"key": "etchant_concentration", "label": "蚀刻液浓度", "input_type": "number", "parser": "float", "placeholder": "1.28", "unit": "g/cm³"},
+      {"key": "spray_pressure", "label": "喷淋压力", "input_type": "number", "parser": "float", "placeholder": "1.6", "unit": "bar"},
+      {"key": "develop_time_sec", "label": "显影时间", "input_type": "number", "parser": "float", "placeholder": "30", "unit": "sec"},
+      {"key": "substrate_expansion_mm", "label": "基材尺寸漂移", "input_type": "number", "parser": "float", "placeholder": "0.09", "unit": "mm"}
+    ]
+  },
+  "P06": {
+    "summary": "清洗干燥工序重点关注离子残留、干燥时间和铜面状态。",
+    "symptom_ids": ["S08", "S09", "S14", "S17"],
+    "fields": [
+      {"key": "ionic_residue", "label": "离子残留", "input_type": "number", "parser": "float", "placeholder": "1.8", "unit": "ug/cm²"},
+      {"key": "dry_time_sec", "label": "干燥时间", "input_type": "number", "parser": "float", "placeholder": "28", "unit": "sec"},
+      {"key": "copper_surface_state", "label": "铜面状态", "input_type": "select", "parser": "select", "options": ["正常", "轻微发黑", "发黑", "氧化"], "help_text": "观察铜面颜色与氧化状态"}
+    ]
+  },
+  "P07": {
+    "summary": "贴合工序关注压力、含水率、表面清洁和真空脱泡效果。",
+    "symptom_ids": ["S05", "S06", "S09", "S14", "S16"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "2% 或 0.02"},
+      {"key": "lamination_pressure", "label": "贴合压力", "input_type": "number", "parser": "float", "placeholder": "0.42", "unit": "MPa"},
+      {"key": "humidity", "label": "材料/环境湿度", "input_type": "number", "parser": "float", "placeholder": "57", "unit": "%RH"},
+      {"key": "surface_cleanliness", "label": "贴合前洁净度", "input_type": "select", "parser": "select", "options": ["良好", "一般", "差"]},
+      {"key": "prebake_time_min", "label": "预烘烤时长", "input_type": "number", "parser": "float", "placeholder": "18", "unit": "min"},
+      {"key": "dry_time_sec", "label": "脱泡/干燥时间", "input_type": "number", "parser": "float", "placeholder": "24", "unit": "sec"},
+      {"key": "ambient_humidity", "label": "环境湿度", "input_type": "number", "parser": "float", "placeholder": "63", "unit": "%RH"}
+    ]
+  },
+  "P08": {
+    "summary": "冲孔冲型工序常看刀模寿命、定位偏差和毛边情况。",
+    "symptom_ids": ["S06", "S10", "S15"],
+    "fields": [
+      {"key": "tooling_shots", "label": "刀模累计冲次", "input_type": "number", "parser": "int", "placeholder": "120000", "unit": "次"},
+      {"key": "position_offset_mm", "label": "定位偏差", "input_type": "number", "parser": "float", "placeholder": "0.18", "unit": "mm"},
+      {"key": "burr_height_um", "label": "毛边高度", "input_type": "number", "parser": "float", "placeholder": "35", "unit": "um"}
+    ]
+  },
+  "P09": {
+    "summary": "预焊接工序重点看温度、停留时间、助焊剂状态和焊盘表面情况。",
+    "symptom_ids": ["S07", "S08", "S09", "S17"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "5% 或 0.05"},
+      {"key": "solder_temp", "label": "焊接温度", "input_type": "number", "parser": "float", "placeholder": "325", "unit": "℃"},
+      {"key": "flux_age_hours", "label": "助焊剂在岗时长", "input_type": "number", "parser": "float", "placeholder": "10", "unit": "小时"},
+      {"key": "dwell_time_sec", "label": "停留时间", "input_type": "number", "parser": "float", "placeholder": "1.5", "unit": "sec"},
+      {"key": "pad_surface_state", "label": "焊盘表面状态", "input_type": "select", "parser": "select", "options": ["正常", "轻微氧化", "氧化", "发黑"]},
+      {"key": "ambient_humidity", "label": "环境湿度", "input_type": "number", "parser": "float", "placeholder": "61", "unit": "%RH"}
+    ]
+  },
+  "P10": {
+    "summary": "焊线/终焊工序关注温度、停留时间、助焊剂寿命与焊盘氧化。",
+    "symptom_ids": ["S07", "S08", "S09", "S17"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "6% 或 0.06"},
+      {"key": "solder_temp", "label": "焊接温度", "input_type": "number", "parser": "float", "placeholder": "330", "unit": "℃"},
+      {"key": "flux_age_hours", "label": "助焊剂在岗时长", "input_type": "number", "parser": "float", "placeholder": "12", "unit": "小时"},
+      {"key": "dwell_time_sec", "label": "停留时间", "input_type": "number", "parser": "float", "placeholder": "1.8", "unit": "sec"},
+      {"key": "pad_surface_state", "label": "焊盘表面状态", "input_type": "select", "parser": "select", "options": ["正常", "轻微氧化", "氧化", "发黑"]},
+      {"key": "ambient_humidity", "label": "环境湿度", "input_type": "number", "parser": "float", "placeholder": "60", "unit": "%RH"}
+    ]
+  },
+  "P11": {
+    "summary": "模压定型工序重点看模压压力、冷却时间和模温稳定性。",
+    "symptom_ids": ["S06", "S09", "S13"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "2% 或 0.02"},
+      {"key": "press_pressure", "label": "模压压力", "input_type": "number", "parser": "float", "placeholder": "0.50", "unit": "MPa"},
+      {"key": "cooling_time_sec", "label": "冷却时间", "input_type": "number", "parser": "float", "placeholder": "28", "unit": "sec"},
+      {"key": "mold_temp_delta", "label": "模温波动", "input_type": "number", "parser": "float", "placeholder": "7", "unit": "℃"}
+    ]
+  },
+  "P12": {
+    "summary": "电阻/耐压/外观检测常看治具接触阻抗、重复性与残留污染。",
+    "symptom_ids": ["S03", "S04", "S09", "S18"],
+    "fields": [
+      {"key": "defect_rate", "label": "不良率", "input_type": "text", "parser": "percent_or_float", "placeholder": "1.5% 或 0.015"},
+      {"key": "fixture_contact_r", "label": "治具接触阻抗", "input_type": "number", "parser": "float", "placeholder": "0.24", "unit": "Ω"},
+      {"key": "repeatability_gap", "label": "复测偏差", "input_type": "number", "parser": "float", "placeholder": "0.08", "unit": "%"},
+      {"key": "ionic_residue", "label": "离子残留", "input_type": "number", "parser": "float", "placeholder": "1.6", "unit": "ug/cm²"}
+    ]
+  }
+}

@@ -1,4 +1,9 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
+"""工艺路径优化引擎。
+
+哪些工序拖慢节拍、哪些工序质量风险高，以及能从并行/合并/替代三个方向做什么改善，不讨论原因。
+"""
 
 from collections import defaultdict
 from dataclasses import asdict
@@ -10,7 +15,10 @@ from .models import ProcessTime, stats_from_records
 
 
 class OptimizationEngine:
+    """路径优化主类。"""
+
     def analyze(self, excel_paths: List[str]) -> Dict[str, Any]:
+        """分析一组 Excel 记录并输出瓶颈与优化建议。"""
         records: List[ProcessTime] = []
         for path in excel_paths:
             records.extend(load_process_times_from_excel(path))
@@ -38,6 +46,7 @@ class OptimizationEngine:
         }
 
     def _compute_process_stats(self, records: List[ProcessTime]) -> List[Dict[str, Any]]:
+        """按工序聚合基础统计量。"""
         grouped: Dict[Tuple[str, str], List[ProcessTime]] = defaultdict(list)
         for record in records:
             grouped[(record.process_id, record.process_name)].append(record)
@@ -51,6 +60,10 @@ class OptimizationEngine:
         return result
 
     def _detect_bottlenecks(self, records: List[ProcessTime]) -> List[Dict[str, Any]]:
+        """识别瓶颈工序。
+
+        综合判断三类信号：负载比、产出偏低、不良率偏高。
+        """
         by_section: Dict[str, List[ProcessTime]] = defaultdict(list)
         for r in records:
             by_section[r.section].append(r)
@@ -78,6 +91,7 @@ class OptimizationEngine:
                 ]):
                     continue
 
+                # severity 主要用于排序，不是精确物理量。
                 severity = 0.0
                 if load_ratio is not None:
                     severity += min(load_ratio, 2.0)
@@ -109,6 +123,7 @@ class OptimizationEngine:
         return findings
 
     def _suggest_actions(self, records: List[ProcessTime], bottlenecks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """根据瓶颈结果生成改善动作。"""
         record_map = {(r.section, r.process_name): r for r in records}
         actions: List[Dict[str, Any]] = []
 
@@ -118,6 +133,7 @@ class OptimizationEngine:
                 continue
 
             if b["load_ratio"] is not None and b["load_ratio"] > 1.1:
+                # 节拍明显被压住时，优先考虑并行增人或拆分工位。
                 target_manpower = _estimate_target_manpower(r)
                 actions.append(
                     {
@@ -131,6 +147,7 @@ class OptimizationEngine:
                 )
 
             if r.extra_factor and r.extra_factor >= 1.15:
+                # extra_factor 高，通常意味着准备、等待或切换损耗偏多。
                 actions.append(
                     {
                         "type": "merge",
@@ -143,6 +160,7 @@ class OptimizationEngine:
                 )
 
             if r.defect_rate and r.defect_rate >= 0.08:
+                # 高不良率会吞噬有效产能，因此要给质量侧建议。
                 actions.append(
                     {
                         "type": "substitute",
@@ -181,6 +199,7 @@ class OptimizationEngine:
         return unique
 
     def _find_merge_opportunities(self, records: List[ProcessTime]) -> List[Dict[str, Any]]:
+        """寻找可以合并的相邻短节拍工序。"""
         by_section: Dict[str, List[ProcessTime]] = defaultdict(list)
         for r in records:
             if r.sequence is None:
@@ -221,6 +240,7 @@ class OptimizationEngine:
 
 
 def _estimate_target_manpower(record: ProcessTime) -> float:
+    """按 ECT / takt 粗估目标人力。"""
     if record.ect_sec is None or record.takt_sec is None or record.takt_sec == 0:
         return 1.0
     theoretical = record.ect_sec / record.takt_sec
@@ -229,10 +249,12 @@ def _estimate_target_manpower(record: ProcessTime) -> float:
 
 
 def _priority_rank(priority: str) -> int:
+    """把文字优先级映射成可排序数字。"""
     return {"high": 0, "medium": 1, "low": 2}.get(priority, 3)
 
 
 def _is_core_process(record: ProcessTime) -> bool:
+    """过滤不适合做主路径分析的辅助记录。"""
     if record.sequence is None or record.ct_sec is None:
         return False
     name = record.process_name.strip()

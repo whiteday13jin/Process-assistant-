@@ -1,5 +1,11 @@
 ﻿from __future__ import annotations
 
+"""知识库加载与反馈持久化层。
+
+这个模块服务于原有结构化决策链路，负责把 JSON 知识库和反馈日志读成内存对象。
+它本身不做诊断推理，而是给诊断引擎提供“规则、案例、原因、方案、反馈效果”这些基础材料。
+"""
+
 import json
 from collections import defaultdict
 from dataclasses import dataclass
@@ -11,6 +17,8 @@ from .models import Case, Cause, FeedbackEvent, Process, Solution, Symptom
 
 @dataclass(frozen=True)
 class Rule:
+    """显式规则，适合表达“某工序 + 某症状 -> 某原因”的确定性知识。"""
+
     id: str
     process_ids: List[str]
     symptom_ids: List[str]
@@ -20,6 +28,8 @@ class Rule:
 
 @dataclass
 class KnowledgeBase:
+    """结构化知识库聚合对象，是诊断引擎启动时加载的主数据。"""
+
     processes: Dict[str, Process]
     symptoms: Dict[str, Symptom]
     causes: Dict[str, Cause]
@@ -31,17 +41,21 @@ class KnowledgeBase:
 
 @dataclass(frozen=True)
 class CauseEffectiveness:
+    """某个原因在历史反馈中的效果统计。"""
+
     cause_id: str
     success: int
     fail: int
 
     @property
     def score(self) -> float:
-        # Laplace smoothing keeps low-sample causes from dominating.
+        # 拉普拉斯平滑可以防止样本极少的原因因为一次成功就被过度放大。
         return (self.success + 1) / (self.success + self.fail + 2)
 
 
 def load_knowledge_base(path: str | Path) -> KnowledgeBase:
+    """读取主知识库 JSON，并拆成诊断引擎便于直接使用的映射结构。"""
+
     with open(path, "r", encoding="utf-8-sig") as f:
         raw = json.load(f)
 
@@ -69,6 +83,8 @@ def load_knowledge_base(path: str | Path) -> KnowledgeBase:
 
 
 def load_feedback_effectiveness(path: str | Path) -> Dict[str, CauseEffectiveness]:
+    """从反馈日志中统计每个原因的成功/失败次数，用于诊断结果现实校正。"""
+
     stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"success": 0, "fail": 0})
     p = Path(path)
     if not p.exists():
@@ -94,8 +110,9 @@ def load_feedback_effectiveness(path: str | Path) -> Dict[str, CauseEffectivenes
 
 
 def append_feedback(path: str | Path, event: FeedbackEvent) -> None:
+    """把一次现场反馈追加写入日志，供后续统计与回放。"""
+
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("a", encoding="utf-8-sig") as f:
         f.write(json.dumps(event.__dict__, ensure_ascii=False) + "\n")
-

@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+"""本地向量索引。
+
+这个文件解决“知识片段怎么存”和“问题来了怎么找”。对应 LangChain 版里的 VectorStore + Retriever。
+"""
+
 import json
 import re
 from dataclasses import asdict
@@ -14,6 +19,12 @@ from .rag_models import Chunk, RetrievedChunk
 
 
 class LocalVectorIndex:
+    """本地索引对象。
+
+    初始化时除了保留原始向量，还会缓存归一化向量、正文词项和标题词项，
+    这样检索时可以同时做向量分、词法分和标题分。
+    """
+
     def __init__(self, chunks: List[Chunk], vectors: np.ndarray, manifest: Dict[str, Any]) -> None:
         if len(chunks) != len(vectors):
             raise ValueError("chunks length does not match vector count")
@@ -34,13 +45,14 @@ class LocalVectorIndex:
         batch_size: int = 32,
         metadata: Dict[str, Any] | None = None,
     ) -> "LocalVectorIndex":
+        """从 chunk 构建索引并落盘。"""
         if not chunks:
             raise ValueError("cannot build index from empty chunks")
 
         vectors = np.asarray(embedder.embed_texts([c.text for c in chunks], batch_size=batch_size))
         if vectors.ndim != 2:
             raise ValueError("embedding output must be a 2D matrix")
-
+#二维矩阵验证。
         manifest = {
             "engine": "local_rag_v1",
             "provider": embedder.config.provider,
@@ -61,6 +73,7 @@ class LocalVectorIndex:
 
     @classmethod
     def load(cls, index_dir: str | Path) -> "LocalVectorIndex":
+        """从本地目录恢复索引。"""
         root = Path(index_dir).resolve()
         manifest_path = root / "manifest.json"
         chunks_path = root / "chunks.jsonl"
@@ -83,6 +96,7 @@ class LocalVectorIndex:
         return cls(chunks=chunks, vectors=vectors, manifest=manifest)
 
     def save(self, index_dir: str | Path) -> None:
+        """把索引写到本地文件，方便调试和演示。"""
         root = Path(index_dir).resolve()
         root.mkdir(parents=True, exist_ok=True)
 
@@ -105,6 +119,7 @@ class LocalVectorIndex:
         title_weight: float = 0.10,
         max_per_doc: int | None = 2,
     ) -> List[RetrievedChunk]:
+        """执行检索与轻量重排。"""
         if top_k < 1:
             raise ValueError("top_k must be >= 1")
         if vector_weight < 0 or lexical_weight < 0 or title_weight < 0:
@@ -125,12 +140,14 @@ class LocalVectorIndex:
                 f"query vector dim mismatch: expected {self.vectors.shape[1]}, got {q.shape[0]}"
             )
 
+        # 先归一化，这样点积就等价于余弦相似度。
         q = _normalize(q.reshape(1, -1))[0]
         vector_scores = np.dot(self._norm_vectors, q)
         lexical_scores = np.zeros_like(vector_scores)
         title_scores = np.zeros_like(vector_scores)
         final_scores = vector_scores.copy()
         if query_text:
+            # 当问题文本存在时，再补上词法和标题信号，使结果更可解释。
             query_terms = _terms(query_text)
             if query_terms:
                 for i in range(len(self.chunks)):
@@ -142,7 +159,8 @@ class LocalVectorIndex:
                     + title_weight * title_scores
                 )
 
-        # Retrieve a wider pool first, then apply diversity control.
+        # 先取更大的候选池，再做“每个文档最多取几段”的多样性控制，
+        # 避免 top-k 全来自同一篇文档。
         candidate_k = min(max(top_k * 4, 20), len(self.chunks))
         candidate_indices = np.argsort(-final_scores)[:candidate_k]
         top_indices: List[int] = []
@@ -194,10 +212,11 @@ def _normalize(array: np.ndarray) -> np.ndarray:
 
 
 def _terms(text: str) -> set[str]:
+    """把文本拆成简单词项集合。"""
     text = " ".join(text.lower().split())
     tokens = {t for t in re.findall(r"[a-z0-9_]{2,}", text)}
     cjk = re.sub(r"[^\u4e00-\u9fff]", "", text)
-    # Use bi-grams so Chinese lexical overlap stays meaningful.
+    # 使用双字切分，让中文词法重叠更有意义。
     for i in range(len(cjk) - 1):
         tokens.add(cjk[i : i + 2])
     return tokens

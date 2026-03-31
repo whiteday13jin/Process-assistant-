@@ -1,4 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
+"""结构化异常诊断引擎。
+
+这部分是项目里最“非 LLM 核心”的一条链路：
+即使完全不依赖大模型，也能根据规则、案例和原因画像给出可执行动作。
+"""
 
 from collections import defaultdict
 from dataclasses import asdict
@@ -9,12 +15,15 @@ from .models import CauseCandidate, DiagnosisRequest, ValidationError
 
 
 class DiagnosisEngine:
+    """结构化诊断主类。"""
+
     def __init__(self, knowledge_base_path: str, feedback_log_path: str) -> None:
         self.kb: KnowledgeBase = load_knowledge_base(knowledge_base_path)
         self.feedback_log_path = feedback_log_path
 
     @staticmethod
     def input_schema() -> Dict[str, Any]:
+        """返回诊断请求的结构约束。"""
         return {
             "type": "object",
             "required": ["request_id", "process_id", "symptom_ids", "observed"],
@@ -34,6 +43,10 @@ class DiagnosisEngine:
         }
 
     def diagnose(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """执行一次诊断。
+
+        主流程：校验输入 -> 规则打分 -> 案例打分 -> 原因画像打分 -> 反馈修正 -> 输出动作方案。
+        """
         req = DiagnosisRequest.from_payload(payload)
 
         if req.process_id not in self.kb.processes:
@@ -51,6 +64,7 @@ class DiagnosisEngine:
         self._score_by_cases(req, cause_scores, traces)
         self._score_by_cause_profile(req, cause_scores, traces)
 
+        # 历史反馈不单独决定结果，而是对现有判断做“现实校正”。
         for cause_id, score in list(cause_scores.items()):
             base_weight = self.kb.causes[cause_id].base_weight
             effect = feedback_effectiveness.get(cause_id)
@@ -105,6 +119,7 @@ class DiagnosisEngine:
         cause_scores: Dict[str, float],
         traces: Dict[str, List[Dict[str, Any]]],
     ) -> None:
+        """按规则命中情况打分。"""
         request_sym = set(req.symptom_ids)
 
         for rule in self.kb.rules:
@@ -142,6 +157,7 @@ class DiagnosisEngine:
             process_similarity = 1.0 if case.process_id == req.process_id else 0.0
             context_similarity = self._context_similarity(req.observed, case.context)
 
+            # 症状相似最重要，其次是工序相同，再其次是上下文接近。
             score = (0.55 * symptom_similarity + 0.3 * process_similarity + 0.15 * context_similarity) * case.success_score
             if score < 0.25:
                 continue
@@ -194,6 +210,7 @@ class DiagnosisEngine:
 
     @staticmethod
     def _context_similarity(observed: Dict[str, Any], sample: Dict[str, Any]) -> float:
+        """比较现场观测值和案例上下文的接近程度。"""
         if not sample:
             return 0.6
         scores: List[float] = []
@@ -213,6 +230,7 @@ class DiagnosisEngine:
 
     @staticmethod
     def _evaluate_conditions(observed: Dict[str, Any], conditions: Dict[str, Dict[str, float | str]]) -> float:
+        """评估原因画像里的条件是否被当前现场满足。"""
         if not conditions:
             return 1.0
 
@@ -230,6 +248,7 @@ class DiagnosisEngine:
 
 
 def _compare(obs: Any, op: Any, value: Any) -> bool:
+    """比较单个条件是否成立。"""
     if op not in {">", ">=", "<", "<=", "=="}:
         return False
     if isinstance(obs, (int, float)) and isinstance(value, (int, float)):

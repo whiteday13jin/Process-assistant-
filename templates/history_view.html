@@ -1,26 +1,30 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>报告详情</title>
+  <title>技术详细报告</title>
   <style>
     body { font-family:"Microsoft YaHei",sans-serif; background:#f4f7fb; margin:0; }
     .nav { background:#111827; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; }
     .nav a { color:#dbeafe; text-decoration:none; margin-left:14px; }
     .wrap { max-width:1100px; margin:24px auto; padding:0 16px; }
-    .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
-    pre { background:#0b1020; color:#d8e1ff; padding:16px; border-radius:10px; overflow:auto; }
+    .card { background:#fff; border-radius:14px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); margin-bottom:12px; }
+    .hint { color:#475467; line-height:1.7; }
+    pre { background:#0b1020; color:#d8e1ff; padding:16px; border-radius:10px; overflow:auto; font-size:13px; line-height:1.6; }
   </style>
 </head>
 <body>
   <div class="nav">
-    <div>报告详情</div>
+    <div>技术详细报告</div>
     <div><a href="/history">返回历史</a> <a href="/role">角色页</a> <a href="/logout">退出</a></div>
   </div>
   <div class="wrap">
     <div class="card">
       <h3>{{ report_name }}</h3>
+      <p class="hint">此页保留原始 JSON 报告，主要用于调试、验证、回放和排错。普通使用者可优先查看历史页中的业务摘要卡片。</p>
+    </div>
+    <div class="card">
       <pre>{{ content }}</pre>
     </div>
   </div>

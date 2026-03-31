@@ -1,4 +1,17 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
+"""命令行入口。
+
+这个文件是整个项目最直接的运行起点之一。用户在终端里输入的每个子命令，
+都会先进入这里，再被分流到诊断、优化、自研 RAG 或 LangChain 对照版。
+
+可以把它理解成“项目总路由表”：
+
+1. 先加载 `.env`
+2. 再注册所有子命令和参数
+3. 根据 `args.cmd` 选择对应功能链路
+4. 最后统一输出结果
+"""
 
 import argparse
 import json
@@ -20,6 +33,9 @@ from .vector_index import LocalVectorIndex
 
 
 def main() -> None:
+    """CLI 总入口。
+   只负责：收集参数、选择功能、调用对应引擎、输出 JSON 结果。不直接实现业务。
+    """
     load_project_env()
     parser = argparse.ArgumentParser(description="Process knowledge driven decision assistant")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -112,6 +128,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # 下面这组分支就是 CLI 的主运行路径。
     if args.cmd == "diagnose":
         payload = _load_json(args.input)
         engine = DiagnosisEngine(args.kb, args.feedback_log)
@@ -133,6 +150,7 @@ def main() -> None:
         return
 
     if args.cmd == "rag-build":
+        # 自研 RAG 建库顺序：文档加载 -> 切分 -> 向量化 -> 落盘索引
         docs = load_documents_from_dir(args.docs_dir, recursive=not args.no_recursive)
         splitter = TextSplitter(
             chunk_size=args.chunk_size,
@@ -167,6 +185,7 @@ def main() -> None:
         return
 
     if args.cmd == "rag-ask":
+        # 自研 RAG 问答顺序：取问题 -> 读索引 -> 检索/重排/门控 -> 生成答案
         question = _resolve_question(args.question, args.question_file)
         vector_weight, lexical_weight, title_weight = _resolve_retrieval_weights(
             args.vector_weight,
@@ -194,6 +213,7 @@ def main() -> None:
         return
 
     if args.cmd == "rag-eval":
+        # 评测复用自研 RAG 主链路，只是把问题集批量跑一遍并统计指标。
         dataset = _load_json(args.dataset)
         if not isinstance(dataset, list):
             raise ValueError("rag-eval dataset must be a JSON array")
@@ -223,6 +243,7 @@ def main() -> None:
         return
 
     if args.cmd == "rag-build-lc":
+        # LangChain 对照版刻意独立建库，避免和主干 RAG 混在一起。
         manifest = LangChainRagDemo.build(
             args.docs_dir,
             args.index_dir,
@@ -242,6 +263,7 @@ def main() -> None:
         return
 
     if args.cmd == "rag-ask-lc":
+        # LangChain 对照版问答：Retriever -> Prompt -> LLM
         question = _resolve_question(args.question, args.question_file)
         demo = LangChainRagDemo(args.index_dir)
         if not demo.is_ready():
@@ -258,11 +280,16 @@ def main() -> None:
 
 
 def _load_json(path: str) -> Any:
+    """统一读取 JSON，兼容 Windows 常见的 UTF-8 BOM 文件。"""
     with open(path, "r", encoding="utf-8-sig") as f:
         return json.load(f)
 
 
 def _resolve_question(raw_question: str | None, question_file: str | None) -> str:
+    """统一解析问题输入。
+
+    支持直接命令行传问题，也支持从 JSON 文件读取问题。
+    """
     question = (raw_question or "").strip()
     if question:
         return question
@@ -282,22 +309,32 @@ def _resolve_retrieval_weights(
     title_weight: float,
     hybrid_alpha: float | None,
 ) -> tuple[float, float, float]:
+    """兼容旧版检索参数。
+
+    早期只有一个 `hybrid-alpha`，现在拆成了更可解释的三个权重：
+    vector / lexical / title。
+    """
     if hybrid_alpha is None:
         return vector_weight, lexical_weight, title_weight
     alpha = float(hybrid_alpha)
     if not 0.0 <= alpha <= 1.0:
         raise ValueError("hybrid-alpha must be within [0, 1]")
     remain = 1.0 - alpha
-    # Keep backward behavior: all non-vector share remaining score.
+    # 保持旧行为：非向量分共同瓜分剩余权重，只是现在显式拆成两类。
     return alpha, remain * 0.67, remain * 0.33
 
 
 def _emit(payload: Any, output: str | None) -> None:
+    """统一输出结果到终端或文件。
+
+    这里故意做成单一出口，便于保持所有命令输出风格一致，
+    也方便集中兼容 Windows 终端编码差异。
+    """
     rendered = json.dumps(payload, ensure_ascii=False, indent=2)
     try:
         print(rendered)
     except UnicodeEncodeError:
-        # Windows terminals may run in GBK; keep CLI usable by degrading display only.
+        # Windows 终端可能运行在 GBK 环境中，这里只降级显示，不影响真正写出的 UTF-8 文件。
         safe = rendered.encode("gbk", errors="replace").decode("gbk")
         print(safe)
     if output:

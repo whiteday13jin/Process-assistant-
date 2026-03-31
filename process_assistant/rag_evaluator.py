@@ -1,5 +1,12 @@
 ﻿from __future__ import annotations
 
+"""RAG 轻量评测层。
+
+这一层不是为了做学术级 benchmark，而是帮助我们快速回答三个工程问题：
+检索有没有找到对的文档、回答有没有覆盖关键点、该拒答时有没有乱答。
+对于演示项目来说，这类“能解释结果”的评测比复杂指标更实用。
+"""
+
 from statistics import mean
 from typing import Any, Dict, List
 
@@ -15,6 +22,8 @@ REFUSAL_HINTS = [
 
 
 class RagEvaluator:
+    """围绕当前 `RagPipeline` 做离线批量评测。"""
+
     def __init__(self, pipeline: RagPipeline) -> None:
         self.pipeline = pipeline
 
@@ -32,6 +41,8 @@ class RagEvaluator:
         min_lexical_score: float = 0.02,
         min_title_score: float = 0.02,
     ) -> Dict[str, Any]:
+        """对评测集逐条提问，并汇总成一份可读报告。"""
+
         if not dataset:
             raise ValueError("evaluation dataset is empty")
 
@@ -62,6 +73,7 @@ class RagEvaluator:
                 temperature=0.0,
             )
             answer_payload = self.pipeline.to_payload(answer)
+            # 这里把“检索命中”和“回答质量”拆开看，便于判断问题出在召回还是生成。
             hit, recall = _source_metrics(
                 [c["source_path"] for c in answer_payload["retrieved_chunks"]],
                 expected_sources,
@@ -102,6 +114,8 @@ class RagEvaluator:
 
 
 def _source_metrics(retrieved_sources: List[str], expected_sources: List[str]) -> tuple[float, float]:
+    """评估检索结果是否至少命中过目标文档，以及召回比例如何。"""
+
     if not expected_sources:
         return 0.0, 0.0
     retrieved_set = {x.split("/")[-1] for x in retrieved_sources}
@@ -113,6 +127,8 @@ def _source_metrics(retrieved_sources: List[str], expected_sources: List[str]) -
 
 
 def _keyword_coverage(answer: str, keywords: List[str]) -> float:
+    """用关键词覆盖率做一个足够轻量的回答完整度近似指标。"""
+
     if not keywords:
         return 1.0
     text = answer.lower()
@@ -124,6 +140,8 @@ def _keyword_coverage(answer: str, keywords: List[str]) -> float:
 
 
 def _refusal_score(answer: str, answerable: bool) -> float:
+    """评估系统在“该答”与“该拒答”两种场景下是否表现合理。"""
+
     has_refusal = any(hint in answer for hint in REFUSAL_HINTS)
     if answerable:
         return 0.0 if has_refusal else 1.0
@@ -131,6 +149,8 @@ def _refusal_score(answer: str, answerable: bool) -> float:
 
 
 def _safe_mean(values: List[float]) -> float:
+    """空列表时返回 0，避免评测阶段出现无意义异常。"""
+
     if not values:
         return 0.0
     return mean(values)

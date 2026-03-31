@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -11,7 +11,12 @@
     .wrap { max-width:980px; margin:24px auto; padding:0 16px; }
     .card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,.08); margin-bottom:12px; }
     .meta { color:#475467; font-size:14px; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .tag { background:#eef4ff; color:#1849a9; border:1px solid #c7d7fe; border-radius:999px; padding:4px 10px; font-size:13px; }
     ul { margin:6px 0 0 0; padding-left:20px; }
+    dl { display:grid; grid-template-columns:180px 1fr; gap:8px 12px; }
+    dt { font-weight:700; color:#344054; }
+    dd { margin:0; color:#475467; }
   </style>
 </head>
 <body>
@@ -24,6 +29,35 @@
       <h2>请求：{{ result.request_id }}</h2>
       <p class="meta">报告已保存：{{ report_path }}</p>
     </div>
+    {% if result.input_summary %}
+    <div class="card">
+      <h3>输入摘要</h3>
+      <dl>
+        <dt>工序</dt>
+        <dd>{{ result.input_summary.process_name }}（{{ result.input_summary.process_id }}）</dd>
+        <dt>异常现象</dt>
+        <dd>
+          <div class="tags">
+            {% for item in result.input_summary.symptoms %}
+            <span class="tag">{{ item.name }} · {{ item.id }}</span>
+            {% endfor %}
+          </div>
+        </dd>
+        <dt>观测参数</dt>
+        <dd>
+          {% if result.input_summary.observed %}
+          <div class="tags">
+            {% for item in result.input_summary.observed %}
+            <span class="tag">{{ item.label }} = {{ item.value }}</span>
+            {% endfor %}
+          </div>
+          {% else %}
+          未填写额外观测参数
+          {% endif %}
+        </dd>
+      </dl>
+    </div>
+    {% endif %}
     {% for item in result.recommended_actions %}
     <div class="card">
       <h3>#{{ item.rank }} {{ item.cause_name }}（{{ item.cause_id }}）</h3>
