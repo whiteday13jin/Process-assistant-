@@ -1,0 +1,275 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}异常诊断 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .block-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #2a3c50;
+  }
+
+  .sub-block {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #dfe5ed;
+  }
+
+  .symptom-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .symptom-item input {
+    width: auto;
+    margin-top: 2px;
+  }
+
+  .symptom-name {
+    font-size: 13px;
+    color: #2d4054;
+    font-weight: 600;
+  }
+
+  .symptom-meta {
+    margin-top: 3px;
+    color: #748293;
+    font-size: 12px;
+  }
+
+  .field-card {
+    border: 1px solid #d9e0ea;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fbfcfe;
+  }
+
+  .field-help {
+    margin-top: 6px;
+    color: #667789;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="异常诊断页头部">
+  <div>
+    <h1>异常诊断执行台</h1>
+    <p>按工序模板填写异常现象与观测参数，生成班组可直接执行的排查建议。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">当前角色</div>
+      <div class="hero-meta-value">{{ role }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">可用工序模板</div>
+      <div class="hero-meta-value">{{ diagnosis_assets.processes|length }}</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="诊断表单">
+  <div class="section-head">
+    <h2 class="section-title">任务输入</h2>
+    <span class="section-note">先选工序再录入参数</span>
+  </div>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/diagnose" class="form-shell">
+    <div class="form-main">
+      <div class="row-2">
+        <div class="field-group">
+          <label for="request_id">问题编号（可空）</label>
+          <input id="request_id" name="request_id" value="{{ form_state.request_id }}" placeholder="REQ-20260331-001">
+        </div>
+        <div class="field-group">
+          <label for="top_k">返回候选数量 top_k</label>
+          <input id="top_k" name="top_k" type="number" min="1" max="20" value="{{ form_state.top_k }}">
+        </div>
+      </div>
+
+      <div class="sub-block">
+        <h3 class="block-title">1. 选择工序</h3>
+        <div class="field-group">
+          <label for="process_id">工序</label>
+          <select id="process_id" name="process_id">
+            {% for process in diagnosis_assets.processes %}
+            <option value="{{ process.id }}" {% if process.id == form_state.process_id %}selected{% endif %}>{{ process.id }} · {{ process.name }}（{{ process.stage }}）</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="process_summary" class="info-box" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="sub-block">
+        <div class="flex-between" style="margin-bottom:8px;">
+          <h3 class="block-title" style="margin-bottom:0;">2. 选择异常现象</h3>
+          <span class="badge" id="symptom_counter">已选 0 项</span>
+        </div>
+        <div id="symptom_container" class="list-grid"></div>
+      </div>
+
+      <div class="sub-block">
+        <h3 class="block-title">3. 填写观测参数</h3>
+        <div id="field_container" class="field-grid"></div>
+      </div>
+
+      <div class="action-row">
+        <button class="button-primary" type="submit">开始诊断</button>
+        <a class="button-secondary" href="/history">查看历史记录</a>
+      </div>
+      <p class="small muted">提示：参数越贴近现场，诊断结果越稳定。留空表示当前无法确认。</p>
+    </div>
+
+    <aside class="form-side" aria-label="填报建议">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h3 class="section-title" style="font-size:15px;">执行提醒</h3>
+        <span class="section-note">提交前检查</span>
+      </div>
+      <ul class="info-list">
+        <li>优先选择本班次对应工序，避免跨工序误判。</li>
+        <li>至少勾选一个异常现象，便于引擎做因果收敛。</li>
+        <li>数值参数建议填本班次最新测量值。</li>
+      </ul>
+      <div class="info-box" style="margin-top:12px;">
+        当前模板会根据工序自动收敛字段，不会展示无关参数。
+      </div>
+      <div class="info-box" style="margin-top:10px;">
+        表单字段与后端接口保持一致，本页仅做展示层优化。
+      </div>
+    </aside>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const diagnosisAssets = {{ diagnosis_assets|tojson }};
+  const formState = {{ form_state|tojson }};
+
+  const processSelect = document.getElementById("process_id");
+  const summaryBox = document.getElementById("process_summary");
+  const symptomContainer = document.getElementById("symptom_container");
+  const symptomCounter = document.getElementById("symptom_counter");
+  const fieldContainer = document.getElementById("field_container");
+
+  function renderProcessView() {
+    const processId = processSelect.value;
+    const template = diagnosisAssets.templates[processId];
+    const process = diagnosisAssets.processes.find(item => item.id === processId);
+    if (!template || !process) {
+      summaryBox.textContent = "未找到当前工序模板，请重新选择。";
+      symptomContainer.innerHTML = "";
+      fieldContainer.innerHTML = "";
+      symptomCounter.textContent = "已选 0 项";
+      return;
+    }
+
+    summaryBox.textContent = `${process.name}：${template.summary}`;
+    renderSymptoms(template, formState.symptom_ids || []);
+    renderFields(template, formState.observed || {});
+  }
+
+  // 异常项只展示当前工序有效集合，避免输入噪声。
+  function renderSymptoms(template, selectedSymptoms) {
+    const selected = new Set(selectedSymptoms || []);
+    symptomContainer.innerHTML = "";
+
+    for (const symptomId of template.symptom_ids) {
+      const symptom = diagnosisAssets.symptoms[symptomId];
+      if (!symptom) continue;
+      const wrapper = document.createElement("label");
+      wrapper.className = "item-box symptom-item";
+      wrapper.innerHTML = `
+        <input type="checkbox" name="symptom_ids" value="${symptom.id}" ${selected.has(symptom.id) ? "checked" : ""}>
+        <span>
+          <span class="symptom-name">${symptom.name}</span>
+          <span class="symptom-meta">${symptom.id} · 严重度 ${symptom.severity}</span>
+        </span>
+      `;
+      symptomContainer.appendChild(wrapper);
+    }
+
+    updateSymptomCounter();
+  }
+
+  function renderFields(template, observed) {
+    fieldContainer.innerHTML = "";
+
+    for (const field of template.fields) {
+      const value = observed[field.key] ?? "";
+      const card = document.createElement("div");
+      card.className = "field-card";
+
+      const label = document.createElement("label");
+      label.textContent = field.label;
+      card.appendChild(label);
+
+      let input;
+      if (field.input_type === "select") {
+        input = document.createElement("select");
+        input.name = field.key;
+        const blank = document.createElement("option");
+        blank.value = "";
+        blank.textContent = "请选择";
+        input.appendChild(blank);
+        for (const option of field.options || []) {
+          const item = document.createElement("option");
+          item.value = option;
+          item.textContent = option;
+          if (String(value) === option) {
+            item.selected = true;
+          }
+          input.appendChild(item);
+        }
+      } else {
+        input = document.createElement("input");
+        input.name = field.key;
+        input.type = field.input_type === "number" ? "number" : "text";
+        input.step = "any";
+        input.placeholder = field.placeholder || "";
+        input.value = value;
+      }
+      card.appendChild(input);
+
+      if (field.help_text) {
+        const help = document.createElement("div");
+        help.className = "field-help";
+        help.textContent = field.help_text;
+        card.appendChild(help);
+      }
+      if (field.unit) {
+        const unit = document.createElement("div");
+        unit.className = "field-help";
+        unit.textContent = `单位：${field.unit}`;
+        card.appendChild(unit);
+      }
+      fieldContainer.appendChild(card);
+    }
+  }
+
+  function updateSymptomCounter() {
+    const count = symptomContainer.querySelectorAll("input[name='symptom_ids']:checked").length;
+    symptomCounter.textContent = `已选 ${count} 项`;
+  }
+
+  processSelect.addEventListener("change", () => {
+    formState.process_id = processSelect.value;
+    formState.symptom_ids = [];
+    formState.observed = {};
+    renderProcessView();
+  });
+
+  symptomContainer.addEventListener("change", updateSymptomCounter);
+
+  renderProcessView();
+</script>
+{% endblock %}

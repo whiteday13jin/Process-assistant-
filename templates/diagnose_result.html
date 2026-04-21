@@ -1,0 +1,141 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}诊断结果 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .action-card {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #fbfcfe;
+    padding: 12px;
+  }
+
+  .action-card + .action-card {
+    margin-top: 10px;
+  }
+
+  .action-title {
+    margin: 0;
+    font-size: 15px;
+    color: #2a3d51;
+  }
+
+  .action-meta {
+    margin-top: 5px;
+    color: #607082;
+    font-size: 12px;
+  }
+
+  .action-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: #405161;
+    line-height: 1.7;
+    font-size: 13px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="诊断结果头部">
+  <div>
+    <h1>诊断结果已生成</h1>
+    <p>请求号 {{ result.request_id }} 的排查建议已落库，可直接下发执行。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">候选建议</div>
+      <div class="hero-meta-value">{{ result.recommended_actions|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">报告文件</div>
+      <div class="hero-meta-value" style="font-size:13px; line-height:1.35;">已保存</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="请求概览">
+  <div class="section-head">
+    <h2 class="section-title">请求概览</h2>
+    <span class="section-note">报告路径：{{ report_path }}</span>
+  </div>
+  <div class="action-row" style="margin-top:0;">
+    <a class="button-primary" href="/diagnose">继续诊断</a>
+    <a class="button-secondary" href="/history">查看历史记录</a>
+    <a class="button-light" href="/role">返回工作台</a>
+  </div>
+</section>
+
+{% if result.input_summary %}
+<section class="panel section-block" aria-label="输入摘要">
+  <div class="section-head">
+    <h2 class="section-title">输入摘要</h2>
+    <span class="section-note">用于回看填报依据</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">工序</div>
+      <p class="kv-value">{{ result.input_summary.process_name }}（{{ result.input_summary.process_id }}）</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">异常现象</div>
+      <p class="kv-value">{{ result.input_summary.symptoms|length }} 项</p>
+    </article>
+  </div>
+
+  <div style="margin-top:10px;">
+    <div class="small muted" style="margin-bottom:6px;">异常现象</div>
+    <div class="badges">
+      {% for item in result.input_summary.symptoms %}
+      <span class="badge">{{ item.name }} · {{ item.id }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="margin-top:10px;">
+    <div class="small muted" style="margin-bottom:6px;">观测参数</div>
+    {% if result.input_summary.observed %}
+    <div class="badges">
+      {% for item in result.input_summary.observed %}
+      <span class="badge">{{ item.label }} = {{ item.value }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="info-box">未填写额外观测参数。</div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="panel section-block" aria-label="推荐动作">
+  <div class="section-head">
+    <h2 class="section-title">推荐动作</h2>
+    <span class="section-note">按置信排序</span>
+  </div>
+
+  <div class="card-list">
+    {% for item in result.recommended_actions %}
+    <article class="action-card">
+      <h3 class="action-title">#{{ item.rank }} {{ item.cause_name }}（{{ item.cause_id }}）</h3>
+      <div class="action-meta">责任角色：{{ item.owner_role }} · 预计耗时：{{ item.expected_minutes }} 分钟 · 评分：{{ item.score }}</div>
+
+      <div class="small" style="margin-top:8px; color:#55677a;">执行动作</div>
+      <ul class="action-list">
+        {% for act in item.actions %}
+        <li>{{ act }}</li>
+        {% endfor %}
+      </ul>
+
+      <div class="small" style="margin-top:8px; color:#55677a;">检查点</div>
+      <ul class="action-list">
+        {% for cp in item.checkpoints %}
+        <li>{{ cp }}</li>
+        {% endfor %}
+      </ul>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}知识问答 - 工艺决策辅助系统{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="知识问答头部">
+  <div>
+    <h1>知识问答执行台</h1>
+    <p>面向现场问题快速检索工艺知识，并给出带来源引用的回答。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">当前角色</div>
+      <div class="hero-meta-value">{{ role }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">检索链路</div>
+      <div class="hero-meta-value" style="font-size:14px;line-height:1.35;">正式版</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="问答表单">
+  <div class="section-head">
+    <h2 class="section-title">问题输入</h2>
+    <span class="section-note">提交后自动检索并生成引用</span>
+  </div>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/rag" class="form-shell">
+    <div class="form-main">
+      <div class="field-group">
+        <label for="question">问题描述</label>
+        <textarea id="question" name="question" placeholder="例如：焊线后出现虚焊时，应优先排查哪些工艺参数？">{{ question or '' }}</textarea>
+      </div>
+
+      <div class="row-2" style="margin-top:12px;">
+        <div class="field-group">
+          <label for="top_k">Top-K 检索数量</label>
+          <input id="top_k" name="top_k" type="number" min="1" max="10" value="{{ top_k or 4 }}">
+        </div>
+        <div class="field-group">
+          <label for="max_context_chunks">上下文片段数</label>
+          <input id="max_context_chunks" name="max_context_chunks" type="number" min="1" max="10" value="{{ max_context_chunks or 4 }}">
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="button-primary" type="submit">执行知识问答</button>
+        <a class="button-secondary" href="/history">查看历史记录</a>
+        <a class="button-light" href="/rag-lc">切换到 LangChain 对照链路</a>
+      </div>
+
+      <p class="small muted">首次查询若索引不存在，系统会自动基于 <code>data/rag_docs</code> 构建索引。</p>
+    </div>
+
+    <aside class="form-side" aria-label="执行提示">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h3 class="section-title" style="font-size:15px;">执行提醒</h3>
+        <span class="section-note">班组长常用</span>
+      </div>
+      <ul class="info-list">
+        <li>问题描述尽量包含工序名和异常现象，提升检索命中率。</li>
+        <li>Top-K 建议先用 3 到 5，避免引入过多无关片段。</li>
+        <li>若答案不稳定，可适当增大上下文片段数。</li>
+      </ul>
+      <div class="info-box" style="margin-top:12px;">
+        本页仅调整展示层结构，后端检索参数契约保持不变。
+      </div>
+    </aside>
+  </form>
+</section>
+{% endblock %}

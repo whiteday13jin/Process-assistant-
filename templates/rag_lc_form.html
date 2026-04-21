@@ -1,0 +1,76 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}LangChain 问答 - 工艺决策辅助系统{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="LangChain 问答头部">
+  <div>
+    <h1>LangChain 对照执行台</h1>
+    <p>用于与正式版问答做链路对照，便于工程阶段评估检索与生成差异。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">当前角色</div>
+      <div class="hero-meta-value">{{ role }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">检索链路</div>
+      <div class="hero-meta-value" style="font-size:14px;line-height:1.35;">LangChain</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="对照问答表单">
+  <div class="section-head">
+    <h2 class="section-title">对照输入</h2>
+    <span class="section-note">与正式版保持相同输入口径</span>
+  </div>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/rag-lc" class="form-shell">
+    <div class="form-main">
+      <div class="field-group">
+        <label for="question">问题描述</label>
+        <textarea id="question" name="question" placeholder="例如：焊接不实通常先排查哪些工艺因素？">{{ question or '' }}</textarea>
+      </div>
+
+      <div class="row-2" style="margin-top:12px;">
+        <div class="field-group">
+          <label for="top_k">Top-K 检索数量</label>
+          <input id="top_k" name="top_k" type="number" min="1" max="10" value="{{ top_k or 4 }}">
+        </div>
+        <div class="field-group">
+          <label for="max_context_chunks">上下文片段数</label>
+          <input id="max_context_chunks" name="max_context_chunks" type="number" min="1" max="10" value="{{ max_context_chunks or 4 }}">
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="button-primary" type="submit">执行 LangChain 查询</button>
+        <a class="button-secondary" href="/history">查看历史记录</a>
+        <a class="button-light" href="/rag">切换到正式版链路</a>
+      </div>
+
+      <p class="small muted">首次查询若索引不存在，系统会自动基于 <code>data/rag_docs</code> 构建 LangChain 演示索引。</p>
+    </div>
+
+    <aside class="form-side" aria-label="链路说明">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h3 class="section-title" style="font-size:15px;">链路说明</h3>
+        <span class="section-note">对照实验</span>
+      </div>
+      <ul class="info-list">
+        <li>标准流程：Splitter → Embeddings → FAISS → Retriever → Prompt → LLM。</li>
+        <li>建议同一问题同时跑正式版和对照版，观察引用稳定性差异。</li>
+        <li>该链路用于实验评估，不建议直接作为生产默认入口。</li>
+      </ul>
+      <div class="info-box" style="margin-top:12px;">
+        本页只做 UI 结构统一，不新增后端入参与数据结构。
+      </div>
+    </aside>
+  </form>
+</section>
+{% endblock %}

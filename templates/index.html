@@ -1,0 +1,36 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}系统入口 - 工艺决策辅助系统{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="系统入口头部">
+  <div>
+    <h1>工艺决策辅助系统</h1>
+    <p>面向生产现场的异常诊断、路径优化与知识问答统一入口。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">主入口</div>
+      <div class="hero-meta-value" style="font-size:14px;line-height:1.35;">首页工作台</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">当前状态</div>
+      <div class="hero-meta-value">在线</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="功能入口">
+  <div class="section-head">
+    <h2 class="section-title">功能入口</h2>
+    <span class="section-note">按角色选择常用能力</span>
+  </div>
+  <div class="portal-grid">
+    <a class="button-primary" href="/diagnose">进入异常诊断</a>
+    <a class="button-secondary" href="/optimize">进入路径优化</a>
+    <a class="button-light" href="/rag">进入知识问答</a>
+    <a class="button-light" href="/history">查看历史记录</a>
+  </div>
+  <p class="small muted" style="margin-top:12px;">说明：系统默认入口为 <code>/role</code>，本页用于保留通用导航能力。</p>
+</section>
+{% endblock %}

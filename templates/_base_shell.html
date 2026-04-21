@@ -1,0 +1,60 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}工艺决策辅助系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mes-theme.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  {% block top_nav %}
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a class="brand" href="/role" aria-label="返回首页">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M5 13h4l2-7 2 12 2-7h4"></path>
+          </svg>
+        </span>
+        <span class="brand-name">工艺决策辅助系统</span>
+      </a>
+
+      {% if session.get("logged_in") %}
+      <nav class="top-actions" aria-label="顶部工具栏">
+        <a class="top-action-link" href="/history"><span>历史记录</span></a>
+        <button class="top-action-btn" type="button" aria-label="通知">
+          <span>通知</span>
+          <span class="notify-badge">3</span>
+        </button>
+        <details class="user-menu">
+          <summary class="user-chip">
+            <span class="user-text">
+              <span class="user-name">{{ session.get("username", "user") }} / 三线封装车间</span>
+              <span class="user-role">{% if session.get("role", "leader") == "leader" %}班组长账号{% else %}工程师账号{% endif %}</span>
+            </span>
+            <span class="user-caret" aria-hidden="true">▼</span>
+          </summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="/role/switch/leader">切换到班组长</a>
+            <a class="menu-item" href="/role/switch/engineer">切换到工程师</a>
+            <a class="menu-item" href="/logout">退出登录</a>
+          </div>
+        </details>
+      </nav>
+      {% endif %}
+    </div>
+  </header>
+  {% endblock %}
+
+  {% block shell %}
+  <main class="page-shell">
+    <div class="stack">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+  {% endblock %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

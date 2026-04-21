@@ -1,0 +1,196 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}历史记录 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .kind-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+
+  .kind-diagnosis {
+    background: #edf3fb;
+    color: #2c4b67;
+    border-color: #c8d7e7;
+  }
+
+  .kind-optimization {
+    background: #edf6f2;
+    color: #2f5f49;
+    border-color: #c5dccf;
+  }
+
+  .kind-rag {
+    background: #f8f2ea;
+    color: #7c5a31;
+    border-color: #e4d5bf;
+  }
+
+  .kind-rag_lc {
+    background: #f2eff8;
+    color: #5c467d;
+    border-color: #d7cdea;
+  }
+
+  .kind-other {
+    background: #f1f4f7;
+    color: #506071;
+    border-color: #d1d9e2;
+  }
+
+  .summary-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .summary-item {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #f8fafc;
+    padding: 10px;
+  }
+
+  .summary-item strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #708091;
+  }
+
+  .summary-item span {
+    color: #3f5368;
+    line-height: 1.6;
+    font-size: 13px;
+  }
+
+  .badge-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .meta-foot {
+    margin-top: 12px;
+    color: #6f7f90;
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="历史页头部">
+  <div>
+    <h1>报告历史中心</h1>
+    <p>统一检索诊断、优化与知识问答报告，支持业务摘要复盘与技术明细追溯。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">当前筛选</div>
+      <div class="hero-meta-value" style="font-size:13px;line-height:1.35;">{{ kind if kind else 'all' }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">匹配记录</div>
+      <div class="hero-meta-value">{{ reports|length }}</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="筛选区">
+  <div class="section-head">
+    <h2 class="section-title">筛选条件</h2>
+    <span class="section-note">按类型与关键字收敛历史记录</span>
+  </div>
+
+  <form method="get" action="/history" class="row-3">
+    <div class="field-group">
+      <label for="kind">类型</label>
+      <select id="kind" name="kind">
+        <option value="all" {% if kind == "all" %}selected{% endif %}>全部</option>
+        <option value="diagnosis" {% if kind == "diagnosis" %}selected{% endif %}>诊断</option>
+        <option value="optimization" {% if kind == "optimization" %}selected{% endif %}>优化</option>
+        <option value="rag" {% if kind == "rag" %}selected{% endif %}>RAG</option>
+        <option value="rag_lc" {% if kind == "rag_lc" %}selected{% endif %}>LangChain RAG</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label for="q">关键字</label>
+      <input id="q" name="q" value="{{ keyword }}" placeholder="工序、问题、文件名均可搜索">
+    </div>
+    <div class="field-group" style="justify-content:flex-end; display:flex; align-items:flex-end;">
+      <button class="button-primary" type="submit" style="width:100%;">执行查询</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel section-block" aria-label="报告列表">
+  <div class="section-head">
+    <h2 class="section-title">报告列表</h2>
+    <span class="section-note">主任务区</span>
+  </div>
+
+  {% if reports %}
+  <div class="card-list">
+    {% for r in reports %}
+    <article class="report-card">
+      <div class="report-header">
+        <div>
+          <span class="kind-badge kind-{{ r.kind }}">{{ r.kind_label }}</span>
+          <h3 class="report-title" style="margin-top:8px;">{{ r.summary.title }}</h3>
+          <div class="report-subtitle">{{ r.summary.subtitle }}</div>
+          {% if r.summary.badges %}
+          <div class="badge-row">
+            {% for badge in r.summary.badges %}
+            <span class="badge">{{ badge }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="toolbar">
+          <a class="button-secondary" href="/history/detail?name={{ r.name|urlencode }}">业务详情</a>
+          <a class="button-light" href="/history/view?name={{ r.name|urlencode }}">技术详细报告</a>
+        </div>
+      </div>
+
+      {% if r.summary.summary_lines %}
+      <div class="summary-grid">
+        {% for item in r.summary.summary_lines %}
+        <article class="summary-item">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.value }}</span>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="meta-foot">
+        <span>记录时间：{{ r.mtime }}</span>
+        <span>文件：{{ r.name }} · {{ r.size_kb }} KB</span>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="info-box">当前筛选条件下没有找到历史记录，请调整类型或关键字后重试。</div>
+  {% endif %}
+</section>
+{% endblock %}

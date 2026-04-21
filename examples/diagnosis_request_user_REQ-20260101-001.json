@@ -1,0 +1,12 @@
+﻿{
+  "request_id": "REQ-20260101-001",
+  "process_id": "P10",
+  "symptom_ids": ["S07", "S08", "S01"],
+  "observed": {
+    "defect_rate": 0.03,
+    "humidity": "unknown",
+    "flux_age_hours": 1.5,
+    "oven_temp_delta": 10
+  },
+  "top_k": 3
+}

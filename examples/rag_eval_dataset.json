@@ -1,0 +1,307 @@
+﻿[
+  {
+    "id": "RAG-001",
+    "question": "焊线后出现虚焊，优先检查哪些工艺因素？",
+    "expected_sources": [
+      "焊线工序异常处理手册.md",
+      "焊盘氧化与虚焊诊断对照表.md"
+    ],
+    "expected_keywords": [
+      "焊盘氧化",
+      "助焊剂",
+      "温度",
+      "压力"
+    ],
+    "answerable": true,
+    "notes": "验证焊接类问题的基础检索与多因素总结能力。"
+  },
+  {
+    "id": "RAG-002",
+    "question": "如果焊盘有点发暗，而且助焊剂已经用了很久，现场应该先怎么判断？",
+    "expected_sources": [
+      "焊线工序异常处理手册.md",
+      "焊盘氧化与虚焊诊断对照表.md"
+    ],
+    "expected_keywords": [
+      "更换新助焊剂",
+      "清洁",
+      "试焊",
+      "焊盘表面"
+    ],
+    "answerable": true,
+    "notes": "测试更口语化的现场问法。"
+  },
+  {
+    "id": "RAG-003",
+    "question": "假焊一般先看什么？",
+    "expected_sources": [
+      "焊线工序异常处理手册.md",
+      "焊盘氧化与虚焊诊断对照表.md",
+      "班组长现场异常排查 SOP.md"
+    ],
+    "expected_keywords": [
+      "焊盘",
+      "助焊剂",
+      "温度",
+      "压力"
+    ],
+    "answerable": true,
+    "notes": "测试同义表达对虚焊的召回。"
+  },
+  {
+    "id": "RAG-004",
+    "question": "导电浆料印刷后电阻偏高，为什么不能只看印刷工序？",
+    "expected_sources": [
+      "导电浆料印刷常见缺陷分析.md",
+      "烘烤固化温度与时间控制指南.md",
+      "工艺工程师改善建议周报样例.md"
+    ],
+    "expected_keywords": [
+      "固化",
+      "厚度",
+      "联动",
+      "温度"
+    ],
+    "answerable": true,
+    "notes": "验证跨工序联动信息整合。"
+  },
+  {
+    "id": "RAG-005",
+    "question": "印刷层厚度偏薄又碰到固化波动，后面通常会出现什么问题？",
+    "expected_sources": [
+      "导电浆料印刷常见缺陷分析.md",
+      "烘烤固化温度与时间控制指南.md"
+    ],
+    "expected_keywords": [
+      "电阻偏高",
+      "附着力",
+      "波动",
+      "检测"
+    ],
+    "answerable": true,
+    "notes": "测试跨文档拼接回答能力。"
+  },
+  {
+    "id": "RAG-006",
+    "question": "曝光对位偏移先看哪些设备项？",
+    "expected_sources": [
+      "曝光对位偏移排查指南.md"
+    ],
+    "expected_keywords": [
+      "定位相机",
+      "基准识别",
+      "重复定位",
+      "补偿"
+    ],
+    "answerable": true,
+    "notes": "验证单文档直接命中。"
+  },
+  {
+    "id": "RAG-007",
+    "question": "为什么曝光偏移不一定只是设备问题？",
+    "expected_sources": [
+      "曝光对位偏移排查指南.md",
+      "烘烤固化温度与时间控制指南.md"
+    ],
+    "expected_keywords": [
+      "基材尺寸变化",
+      "温湿度",
+      "热历史",
+      "治具"
+    ],
+    "answerable": true,
+    "notes": "测试设备与材料状态的联合解释。"
+  },
+  {
+    "id": "RAG-008",
+    "question": "贴合后鼓包怎么排查？",
+    "expected_sources": [
+      "贴合分层与起泡问题 FAQ.md",
+      "班组长现场异常排查 SOP.md"
+    ],
+    "expected_keywords": [
+      "吸湿",
+      "表面清洁",
+      "温度",
+      "保压"
+    ],
+    "answerable": true,
+    "notes": "测试 FAQ 文体与现场问法。"
+  },
+  {
+    "id": "RAG-009",
+    "question": "高湿环境为什么会让贴合起泡更明显？",
+    "expected_sources": [
+      "贴合分层与起泡问题 FAQ.md",
+      "耐压不良与绝缘失效案例集.md"
+    ],
+    "expected_keywords": [
+      "吸湿",
+      "受热",
+      "气泡",
+      "层间"
+    ],
+    "answerable": true,
+    "notes": "验证环境因素与后续风险联动。"
+  },
+  {
+    "id": "RAG-010",
+    "question": "模压后翘曲是不是只要加压力就能解决？",
+    "expected_sources": [
+      "模压定型翘曲问题复盘报告.md",
+      "工艺工程师改善建议周报样例.md"
+    ],
+    "expected_keywords": [
+      "不是",
+      "静置时间",
+      "升温",
+      "应力"
+    ],
+    "answerable": true,
+    "notes": "验证案例复盘型文档的结论抽取。"
+  },
+  {
+    "id": "RAG-011",
+    "question": "模压翘曲为什么会和前段贴合有关系？",
+    "expected_sources": [
+      "模压定型翘曲问题复盘报告.md",
+      "贴合分层与起泡问题 FAQ.md"
+    ],
+    "expected_keywords": [
+      "残余应力",
+      "静置",
+      "贴合",
+      "热历史"
+    ],
+    "answerable": true,
+    "notes": "测试跨工序因果解释。"
+  },
+  {
+    "id": "RAG-012",
+    "question": "耐压不良如果同时伴随起泡，应该优先回看哪些环节？",
+    "expected_sources": [
+      "耐压不良与绝缘失效案例集.md",
+      "贴合分层与起泡问题 FAQ.md",
+      "工艺工程师改善建议周报样例.md"
+    ],
+    "expected_keywords": [
+      "贴合",
+      "吸湿",
+      "暴露时间",
+      "绝缘"
+    ],
+    "answerable": true,
+    "notes": "验证耐压与贴合联动分析。"
+  },
+  {
+    "id": "RAG-013",
+    "question": "返工后耐压下降通常说明什么风险？",
+    "expected_sources": [
+      "耐压不良与绝缘失效案例集.md"
+    ],
+    "expected_keywords": [
+      "二次热历史",
+      "绝缘层",
+      "残留",
+      "受损"
+    ],
+    "answerable": true,
+    "notes": "验证案例集抽取。"
+  },
+  {
+    "id": "RAG-014",
+    "question": "班组长遇到重复异常时，什么时候应该升级给工程师？",
+    "expected_sources": [
+      "班组长现场异常排查 SOP.md"
+    ],
+    "expected_keywords": [
+      "重复出现",
+      "趋势上升",
+      "跨工序",
+      "单变量验证"
+    ],
+    "answerable": true,
+    "notes": "验证 SOP 类知识检索。"
+  },
+  {
+    "id": "RAG-015",
+    "question": "现场排异常时为什么不能一上来就连续调很多参数？",
+    "expected_sources": [
+      "班组长现场异常排查 SOP.md",
+      "焊盘氧化与虚焊诊断对照表.md"
+    ],
+    "expected_keywords": [
+      "控制变量",
+      "记录",
+      "误判",
+      "验证"
+    ],
+    "answerable": true,
+    "notes": "验证方法论类回答。"
+  },
+  {
+    "id": "RAG-016",
+    "question": "本周工艺周报里提到哪些跨工序联动问题？",
+    "expected_sources": [
+      "工艺工程师改善建议周报样例.md"
+    ],
+    "expected_keywords": [
+      "焊线",
+      "印刷与固化",
+      "贴合与耐压",
+      "模压"
+    ],
+    "answerable": true,
+    "notes": "验证总结型文档的结构化抽取。"
+  },
+  {
+    "id": "RAG-017",
+    "question": "如果虚焊、焊盘发暗和夜班高湿同时出现，常见的排查优先级是什么？",
+    "expected_sources": [
+      "焊线工序异常处理手册.md",
+      "焊盘氧化与虚焊诊断对照表.md",
+      "工艺工程师改善建议周报样例.md"
+    ],
+    "expected_keywords": [
+      "焊盘表面状态",
+      "助焊剂活性",
+      "温度稳定性",
+      "压力一致性"
+    ],
+    "answerable": true,
+    "notes": "测试多条件场景下的排序性回答。"
+  },
+  {
+    "id": "RAG-018",
+    "question": "新型激光微加工工序的最佳脉宽应该设多少？",
+    "expected_sources": [],
+    "expected_keywords": [
+      "资料不足",
+      "未找到依据"
+    ],
+    "answerable": false,
+    "notes": "用于测试知识不足时是否克制拒答。"
+  },
+  {
+    "id": "RAG-019",
+    "question": "某客户专用材料的私有配方比例是多少？",
+    "expected_sources": [],
+    "expected_keywords": [
+      "无法从现有资料判断",
+      "未提供"
+    ],
+    "answerable": false,
+    "notes": "测试不应编造配方类信息。"
+  },
+  {
+    "id": "RAG-020",
+    "question": "A17 机台的保养周期应该怎么设？",
+    "expected_sources": [],
+    "expected_keywords": [
+      "现有语料未覆盖",
+      "需要设备维护资料"
+    ],
+    "answerable": false,
+    "notes": "测试特定机台知识缺失场景。"
+  }
+]

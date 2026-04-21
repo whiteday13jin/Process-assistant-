@@ -1,0 +1,136 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}优化结果 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .table-note {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: #738091;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="优化结果头部">
+  <div>
+    <h1>优化分析已完成</h1>
+    <p>已按你的筛选条件完成瓶颈识别与动作排序，可用于班次复盘与排产调整。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">瓶颈条目</div>
+      <div class="hero-meta-value">{{ result.bottlenecks|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">优化动作</div>
+      <div class="hero-meta-value">{{ result.optimization_actions|length }}</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="筛选信息">
+  <div class="section-head">
+    <h2 class="section-title">筛选信息</h2>
+    <span class="section-note">报告路径：{{ report_path }}</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">来源文件</div>
+      <p class="kv-value">{{ result.focus_filter.source_excel }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">关注工段</div>
+      <p class="kv-value">{{ result.focus_filter.focus_stage }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">优化优先级</div>
+      <p class="kv-value">{{ result.focus_filter.priority }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">目标日产能</div>
+      <p class="kv-value">{{ result.focus_filter.target_capacity }}</p>
+    </article>
+  </div>
+
+  <div class="action-row">
+    <a class="button-primary" href="/optimize">继续优化</a>
+    <a class="button-secondary" href="/history">查看历史记录</a>
+    <a class="button-light" href="/role">返回工作台</a>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="瓶颈列表">
+  <div class="section-head">
+    <h2 class="section-title">瓶颈（Top 15）</h2>
+    <span class="section-note">按负载比与不良率综合排序</span>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>工序</th>
+          <th>负载比</th>
+          <th>日产</th>
+          <th>不良率</th>
+          <th>严重度</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in result.bottlenecks %}
+        {% set sev = (b.severity|string)|lower %}
+        <tr>
+          <td>{{ b.process_name }}</td>
+          <td>{{ b.load_ratio }}</td>
+          <td>{{ b.daily_output }}</td>
+          <td>{{ b.defect_rate }}</td>
+          <td>
+            {% if '高' in sev or 'high' in sev %}
+            <span class="badge is-danger">{{ b.severity }}</span>
+            {% elif '中' in sev or 'medium' in sev %}
+            <span class="badge is-warning">{{ b.severity }}</span>
+            {% else %}
+            <span class="badge">{{ b.severity }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="优化动作列表">
+  <div class="section-head">
+    <h2 class="section-title">优化动作（Top 20）</h2>
+    <span class="section-note">供班次执行复核</span>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>优先级</th>
+          <th>类型</th>
+          <th>工序</th>
+          <th>建议动作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in result.optimization_actions %}
+        <tr>
+          <td>{{ a.priority }}</td>
+          <td>{{ a.type }}</td>
+          <td>{{ a.process_name }}</td>
+          <td>{{ a.action }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">注：本页仅重构展示结构，数据由后端 `optimization_engine` 原样提供。</p>
+</section>
+{% endblock %}

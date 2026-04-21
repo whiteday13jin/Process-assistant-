@@ -1,0 +1,145 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}知识问答结果 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .citation-card {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #fbfcfe;
+    padding: 12px;
+  }
+
+  .citation-card + .citation-card {
+    margin-top: 10px;
+  }
+
+  .citation-title {
+    margin: 0;
+    font-size: 15px;
+    color: #2a3d51;
+  }
+
+  .citation-meta {
+    margin-top: 5px;
+    color: #607082;
+    font-size: 12px;
+  }
+
+  .answer-box {
+    white-space: pre-wrap;
+    line-height: 1.8;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="问答结果头部">
+  <div>
+    <h1>问答结果已生成</h1>
+    <p>问题已完成检索与归纳，可结合来源卡片进行复核。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">引用条数</div>
+      <div class="hero-meta-value">{{ result.citations|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">报告状态</div>
+      <div class="hero-meta-value" style="font-size:13px;line-height:1.35;">已保存</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="问题概览">
+  <div class="section-head">
+    <h2 class="section-title">问题概览</h2>
+    <span class="section-note">报告路径：{{ report_path }}</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">问题</div>
+      <p class="kv-value">{{ result.question }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">模型与引擎</div>
+      <p class="kv-value">{{ result.model }} · {{ result.engine }}</p>
+    </article>
+  </div>
+
+  <div class="action-row">
+    <a class="button-primary" href="/rag">继续提问</a>
+    <a class="button-secondary" href="/history">查看历史记录</a>
+    <a class="button-light" href="/role">返回工作台</a>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="检索解释">
+  <div class="section-head">
+    <h2 class="section-title">检索解释</h2>
+    <span class="section-note">用于理解召回与排序依据</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">重写查询</div>
+      <p class="kv-value">{{ result.query_rewrite.retrieval_query if result.query_rewrite else result.question }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">匹配概念</div>
+      <p class="kv-value">{{ (result.query_rewrite.matched_concepts | join('、')) if result.query_rewrite and result.query_rewrite.matched_concepts else '无' }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">打分公式</div>
+      <p class="kv-value">{{ result.retrieval_policy.formula if result.retrieval_policy else 'N/A' }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">权重</div>
+      <p class="kv-value">
+        {% if result.retrieval_policy %}
+        vector={{ result.retrieval_policy.vector_weight }}，lexical={{ result.retrieval_policy.lexical_weight }}，title={{ result.retrieval_policy.title_weight }}
+        {% else %}
+        N/A
+        {% endif %}
+      </p>
+    </article>
+  </div>
+
+  {% if result.evidence %}
+  <div class="info-box" style="margin-top:10px;">
+    证据门控：top_final={{ result.evidence.top_final_score }}，top_lexical={{ result.evidence.top_lexical_score }}，top_title={{ result.evidence.top_title_score }}，sufficient={{ result.evidence.is_sufficient }}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel section-block" aria-label="回答内容">
+  <div class="section-head">
+    <h2 class="section-title">回答内容</h2>
+    <span class="section-note">建议结合来源卡片阅读</span>
+  </div>
+  <div class="info-box answer-box">{{ result.answer }}</div>
+</section>
+
+<section class="panel section-block" aria-label="引用来源">
+  <div class="section-head">
+    <h2 class="section-title">引用来源</h2>
+    <span class="section-note">回答中的 [1][2] 对应以下卡片</span>
+  </div>
+
+  {% if result.citations %}
+  <div class="card-list">
+    {% for c in result.citations %}
+    <article class="citation-card">
+      <h3 class="citation-title">{{ c.ref_id }} · {{ c.title }}</h3>
+      <div class="citation-meta">{{ c.source_path }} · chunk={{ c.chunk_id }} · score={{ c.score }}</div>
+      <div style="margin-top:8px; color:#405161; line-height:1.7;">{{ c.quote }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="info-box">本次未返回可展示的引用来源。</div>
+  {% endif %}
+</section>
+{% endblock %}

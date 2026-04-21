@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>工艺决策辅助系统</title>
+  <style>
+    :root {
+      --bg-page: #eef1f4;
+      --bg-card: #ffffff;
+      --bg-card-soft: #f4f6f8;
+      --line: #ccd4df;
+      --text-main: #1e2a36;
+      --text-sub: #5f6b78;
+      --primary: #35506d;
+      --primary-hover: #2c435c;
+      --nav-bg: #1f2b36;
+      --nav-border: #334351;
+      --ok: #0f8a52;
+      --warn: #bf3d33;
+      --btn-bg: #45617f;
+      --btn-hover: #3d5671;
+      --shadow-soft: 0 4px 12px rgba(23, 35, 52, 0.04);
+      --radius-md: 6px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      letter-spacing: 0.01em;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    /* 顶部导航保持稳重深色，用于强化正式后台产品感。 */
+    .top-nav {
+      border-bottom: 1px solid var(--nav-border);
+      background: var(--nav-bg);
+    }
+
+    .top-nav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 24px;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: #eef3f9;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #465b70;
+      background: linear-gradient(160deg, #34495d, #2a3d50);
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      color: #dce8f5;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-name {
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      color: #e8edf4;
+      font-size: 13px;
+    }
+
+    .top-actions > * + * {
+      margin-left: 12px;
+      padding-left: 12px;
+      border-left: 1px solid rgba(230, 238, 248, 0.18);
+    }
+
+    .top-action-link,
+    .top-action-btn {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: inherit;
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .top-action-link:hover,
+    .top-action-btn:hover {
+      color: #ffffff;
+    }
+
+    .notify-badge {
+      border-radius: 3px;
+      border: 1px solid #5b6c7d;
+      background: transparent;
+      color: #f2f7ff;
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: center;
+      padding: 0 4px;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-menu summary {
+      list-style: none;
+    }
+
+    .user-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .user-chip {
+      border: none;
+      border-left: 1px solid rgba(230, 238, 248, 0.18);
+      border-radius: 0;
+      background: transparent;
+      padding: 0 0 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .user-text {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 1px;
+      line-height: 1;
+    }
+
+    .user-name {
+      font-size: 13px;
+      color: #eef3fa;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #b9c7d8;
+    }
+
+    .user-caret {
+      font-size: 10px;
+      color: #aebdd0;
+      transform: translateY(-1px);
+    }
+
+    .menu-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 170px;
+      border: 1px solid #d7e0ec;
+      border-radius: 7px;
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+      padding: 6px;
+      z-index: 5;
+    }
+
+    .menu-item {
+      display: block;
+      border-radius: 6px;
+      padding: 8px 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .menu-item:hover {
+      background: #f2f5f8;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 22px 24px 38px;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      box-shadow: 0 2px 8px rgba(23, 35, 52, 0.035);
+    }
+
+    /* 首屏：标题与两张统计卡采用紧凑左右结构，避免上半屏拥挤。 */
+    .hero {
+      padding: 24px 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1.25;
+      font-weight: 600;
+      color: #203145;
+    }
+
+    .hero-subtitle {
+      margin: 10px 0 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-sub);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mini-stat {
+      width: 132px;
+      border: 1px solid #d6dce5;
+      border-radius: 8px;
+      background: #f6f8fa;
+      padding: 11px 10px;
+      text-align: center;
+    }
+
+    .mini-stat-label {
+      font-size: 12px;
+      color: #6d7a8a;
+      line-height: 1.3;
+    }
+
+    .mini-stat-value {
+      margin-top: 6px;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+      color: #223448;
+    }
+
+    .mini-stat-value.is-ok {
+      color: var(--ok);
+    }
+
+    .mini-stat-value.is-warn {
+      color: var(--warn);
+    }
+
+    .section-block {
+      padding: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 11px;
+      border-bottom: 1.5px solid #dee4ec;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 600;
+      color: #26384d;
+    }
+
+    .section-note {
+      color: #738091;
+      font-size: 12px;
+    }
+
+    /* 核心能力区统一按钮主色，避免“功能入口拼盘”观感。 */
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .capability-card {
+      border: 1.5px solid #d4dde8;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      padding: 14px;
+      min-height: 194px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .capability-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid #d4dce6;
+      background: #f1f4f7;
+      color: #536476;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .capability-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .capability-title {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 600;
+      color: #24384d;
+    }
+
+    .capability-desc {
+      margin: 4px 0 0;
+      color: var(--text-sub);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .capability-actions {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .button-primary {
+      margin-top: 0;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid #5d7590;
+      background: var(--btn-bg);
+      color: #f7fbff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+    }
+
+    .button-primary:hover {
+      background: var(--btn-hover);
+    }
+
+    .text-link {
+      margin-top: 0;
+      font-size: 11px;
+      color: #607286;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+    }
+
+    .text-link:hover {
+      text-decoration: underline;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .workspace-section {
+      border-color: #c6d0dc;
+      box-shadow: 0 4px 12px rgba(23, 35, 52, 0.05);
+    }
+
+    .workspace-card {
+      border: 1.5px solid #d3dbe6;
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .workspace-title {
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1.5px solid #d8e0ea;
+      background: var(--bg-card-soft);
+      font-size: 13px;
+      font-weight: 600;
+      color: #2a3a4e;
+    }
+
+    .workspace-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-bottom: 1px solid #d8e0e9;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .workspace-item {
+      border: none;
+      border-bottom: 1px solid #d8e0e9;
+      background: #ffffff;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      border-left-width: 4px;
+      border-left-style: solid;
+    }
+
+    .workspace-item:last-child {
+      border-bottom: none;
+    }
+
+    .priority-p1 {
+      border-left-color: #b64037;
+    }
+
+    .priority-p2 {
+      border-left-color: #8b5a2c;
+    }
+
+    .priority-p3 {
+      border-left-color: #55697f;
+    }
+
+    .priority-info {
+      border-left-color: #4f5f70;
+    }
+
+    .workspace-item-main {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .workspace-item-title {
+      font-size: 12px;
+      color: #2d4054;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .workspace-item-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 10px;
+      row-gap: 1px;
+      font-size: 11px;
+      color: #758394;
+    }
+
+    .workspace-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .workspace-field-label {
+      color: #8190a1;
+      white-space: nowrap;
+    }
+
+    .workspace-field-value {
+      color: #58697c;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-pill {
+      flex-shrink: 0;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      line-height: 1.45;
+      border: 1px solid #c7d0db;
+      background: #f2f5f8;
+      color: #405161;
+      font-weight: 600;
+      margin-top: 1px;
+    }
+
+    .status-pill.is-danger {
+      border-color: #d6b2ae;
+      background: #f8eceb;
+      color: #8f3a34;
+    }
+
+    .status-pill.is-warning {
+      border-color: #d8c8b3;
+      background: #f8f2ea;
+      color: #866038;
+    }
+
+    .status-pill.is-normal {
+      border-color: #cdd6df;
+      background: #f2f5f8;
+      color: #4d5e70;
+    }
+
+    .status-pill.is-done {
+      border-color: #bcd4c8;
+      background: #edf6f0;
+      color: #2f6a4b;
+    }
+
+    .overview-section {
+      border-color: #d5dde8;
+      box-shadow: none;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card {
+      border: 1px solid #d6dde7;
+      border-radius: 6px;
+      background: #f8fafc;
+      padding: 10px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #768494;
+      margin-bottom: 3px;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 600;
+      color: #304355;
+    }
+
+    @media (max-width: 1120px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        width: 100%;
+      }
+
+      .mini-stat {
+        width: calc(50% - 5px);
+      }
+
+      .capability-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .workspace-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .capability-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .top-nav-inner,
+      .page {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .top-nav-inner {
+        flex-wrap: wrap;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      .brand-name {
+        font-size: 17px;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        row-gap: 6px;
+      }
+
+      .top-actions > * + * {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+      }
+
+      .top-action-link,
+      .top-action-btn,
+      .user-chip {
+        padding-right: 12px;
+      }
+
+      .user-chip {
+        border-left: none;
+        padding-left: 0;
+      }
+
+      .hero {
+        padding: 20px 16px;
+      }
+
+      .hero-title {
+        font-size: 27px;
+      }
+
+      .section-block {
+        padding: 16px;
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a class="brand" href="/role" aria-label="返回首页">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M5 13h4l2-7 2 12 2-7h4"></path>
+          </svg>
+        </span>
+        <span class="brand-name">工艺决策辅助系统</span>
+      </a>
+
+      <nav class="top-actions" aria-label="顶部工具栏">
+        <a class="top-action-link" href="/history">
+          <span>历史记录</span>
+        </a>
+        <button class="top-action-btn" type="button" aria-label="通知">
+          <span>通知</span>
+          <span class="notify-badge">3</span>
+        </button>
+        <details class="user-menu">
+          <summary class="user-chip">
+            <span class="user-text">
+              <span class="user-name">{{ username }} / 三线封装车间</span>
+              <span class="user-role">{% if role == "leader" %}班组长账号{% else %}工程师账号{% endif %}</span>
+            </span>
+            <span class="user-caret" aria-hidden="true">▼</span>
+          </summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="/role/switch/leader">切换到班组长</a>
+            <a class="menu-item" href="/role/switch/engineer">切换到工程师</a>
+            <a class="menu-item" href="/logout">退出登录</a>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="stack">
+      <!-- 首屏主区聚焦班组长工作目标与系统状态。 -->
+      <section class="panel hero" aria-label="工作台首屏">
+        <div>
+          <h1 class="hero-title">班组长智能工作台</h1>
+          <p class="hero-subtitle">异常处置、路径优化、知识检索</p>
+        </div>
+        <div class="hero-stats">
+          <article class="mini-stat">
+            <div class="mini-stat-label">今日访问</div>
+            <div class="mini-stat-value">156</div>
+          </article>
+          <article class="mini-stat">
+            <div class="mini-stat-label">系统可用率</div>
+            <div class="mini-stat-value" data-rate="98">98%</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel section-block workspace-section" aria-label="我的工作区">
+        <div class="section-head">
+          <h2 class="section-title">我的工作区</h2>
+          <span class="section-note">本班次待办</span>
+        </div>
+        <div class="workspace-grid">
+          <article class="workspace-card">
+            <h3 class="workspace-title">待处理异常</h3>
+            <ul class="workspace-list">
+              <li class="workspace-item priority-p1">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">压合工序出现贴合分层</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P1</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">A-23041</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">责任人</span>
+                      <span class="workspace-field-value">李工</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">08:40 上报</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-danger">待处置</span>
+              </li>
+              <li class="workspace-item priority-p2">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">焊盘氧化导致虚焊波动</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P2</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">B-19028</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">责任人</span>
+                      <span class="workspace-field-value">张工</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">09:15 上报</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-warning">排查中</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="workspace-card">
+            <h3 class="workspace-title">今日跟进任务</h3>
+            <ul class="workspace-list">
+              <li class="workspace-item priority-p2">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">复核曝光对位偏移整改结果</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P2</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">TASK-015</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">责任人</span>
+                      <span class="workspace-field-value">李工</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">截止 15:30</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-warning">待确认</span>
+              </li>
+              <li class="workspace-item priority-p3">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">提交本班次工艺优化跟进记录</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P3</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">TASK-021</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">责任人</span>
+                      <span class="workspace-field-value">王工</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">截止 18:00</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-normal">进行中</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="workspace-card">
+            <h3 class="workspace-title">最近问答</h3>
+            <ul class="workspace-list">
+              <li class="workspace-item priority-info">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">绝缘失效首检步骤有哪些</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P3</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">Q-1132</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">链路</span>
+                      <span class="workspace-field-value">RAG 自动检索</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">10:20 更新</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-done">已生成</span>
+              </li>
+              <li class="workspace-item priority-info">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">烘烤固化温度偏低如何补救</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P3</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">Q-1128</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">链路</span>
+                      <span class="workspace-field-value">LangChain 检索链</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">09:58 更新</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-done">已生成</span>
+              </li>
+              <li class="workspace-item priority-info">
+                <div class="workspace-item-main">
+                  <span class="workspace-item-title">回流焊温区偏离标准如何修正</span>
+                  <span class="workspace-item-fields">
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">优先级</span>
+                      <span class="workspace-field-value">P3</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">编号</span>
+                      <span class="workspace-field-value">Q-1121</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">链路</span>
+                      <span class="workspace-field-value">RAG 自动检索</span>
+                    </span>
+                    <span class="workspace-field">
+                      <span class="workspace-field-label">时间</span>
+                      <span class="workspace-field-value">09:34 更新</span>
+                    </span>
+                  </span>
+                </div>
+                <span class="status-pill is-done">已生成</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel section-block" aria-label="核心能力区">
+        <div class="section-head">
+          <h2 class="section-title">核心能力</h2>
+          <span class="section-note">执行入口</span>
+        </div>
+        <div class="capability-grid">
+          <article class="capability-card">
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M9 12l2 2 4-4"></path>
+                <path d="M12 3l8 4v6c0 5-3.5 8-8 8s-8-3-8-8V7z"></path>
+              </svg>
+            </span>
+            <h3 class="capability-title">异常诊断</h3>
+            <p class="capability-desc">提交异常单并生成排查路径。</p>
+            <div class="capability-actions">
+              <a class="button-primary" href="/diagnose">进入诊断</a>
+            </div>
+          </article>
+
+          <article class="capability-card">
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M3 17l6-6 4 4 8-8"></path>
+                <path d="M14 7h7v7"></path>
+              </svg>
+            </span>
+            <h3 class="capability-title">路径优化</h3>
+            <p class="capability-desc">导入工序数据并输出调整建议。</p>
+            <div class="capability-actions">
+              <a class="button-primary" href="/optimize">进入优化</a>
+            </div>
+          </article>
+
+          <article class="capability-card">
+            <span class="capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </span>
+            <h3 class="capability-title">知识问答</h3>
+            <p class="capability-desc">检索知识库并返回标准依据。</p>
+            <div class="capability-actions">
+              <a class="text-link" href="/rag-lc">查看 Langchain 版</a>
+              <a class="button-primary" href="/rag">进入问答</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel section-block overview-section" aria-label="平台概览区">
+        <div class="section-head">
+          <h2 class="section-title">平台概览</h2>
+          <span class="section-note">辅助指标</span>
+        </div>
+        <div class="metrics-grid">
+          <article class="metric-card">
+            <div class="metric-label">活跃用户</div>
+            <p class="metric-value">2,847</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">处理任务</div>
+            <p class="metric-value">18,392</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">知识条目</div>
+            <p class="metric-value">5,621</p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">优化建议</div>
+            <p class="metric-value">1,234</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // 系统可用率颜色规则：保留阈值逻辑，低于 60% 时展示告警色。
+    (function () {
+      var rateElement = document.querySelector("[data-rate]");
+      if (!rateElement) return;
+      var value = Number(rateElement.getAttribute("data-rate") || "98");
+      if (Number.isNaN(value)) value = 98;
+      rateElement.classList.add(value < 60 ? "is-warn" : "is-ok");
+      rateElement.textContent = value + "%";
+    })();
+  </script>
+</body>
+</html>

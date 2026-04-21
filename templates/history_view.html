@@ -1,0 +1,44 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}技术详细报告 - 工艺决策辅助系统{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="技术报告头部">
+  <div>
+    <h1>技术详细报告</h1>
+    <p>此页保留原始 JSON 报告，用于调试、验证、回放和排错。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">文件名</div>
+      <div class="hero-meta-value" style="font-size:12px;line-height:1.4;">{{ report_name }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">展示格式</div>
+      <div class="hero-meta-value" style="font-size:13px;line-height:1.35;">JSON</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="报告说明">
+  <div class="section-head">
+    <h2 class="section-title">使用说明</h2>
+    <span class="section-note">调试视图</span>
+  </div>
+  <div class="info-box">
+    普通使用者可优先查看“历史记录”中的业务摘要卡片；本页更适合开发调试与故障定位。
+  </div>
+  <div class="action-row">
+    <a class="button-primary" href="/history/detail?name={{ report_name|urlencode }}">查看业务详情</a>
+    <a class="button-secondary" href="/history">返回历史记录</a>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="原始 JSON">
+  <div class="section-head">
+    <h2 class="section-title">原始 JSON</h2>
+    <span class="section-note">按后端输出原样渲染</span>
+  </div>
+  <pre>{{ content }}</pre>
+</section>
+{% endblock %}

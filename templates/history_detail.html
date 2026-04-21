@@ -1,0 +1,148 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}业务详情 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .text-block {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #f8fafc;
+    padding: 12px;
+    white-space: pre-wrap;
+    line-height: 1.8;
+    color: #405161;
+  }
+
+  .detail-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .detail-card {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #fbfcfe;
+    padding: 12px;
+  }
+
+  .detail-card h4 {
+    margin: 0;
+    font-size: 15px;
+    color: #2a3d51;
+  }
+
+  .detail-meta {
+    margin-top: 5px;
+    color: #607082;
+    font-size: 12px;
+  }
+
+  .detail-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: #405161;
+    line-height: 1.7;
+    font-size: 13px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="业务详情头部">
+  <div>
+    <h1>{{ detail.title }}</h1>
+    <p>类型：{{ report_kind }} · 文件：{{ report_name }}</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">详情分区</div>
+      <div class="hero-meta-value">{{ detail.sections|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">报告类型</div>
+      <div class="hero-meta-value" style="font-size:13px;line-height:1.35;">{{ report_kind }}</div>
+    </article>
+  </div>
+</section>
+
+{% if detail.header_lines %}
+<section class="panel section-block" aria-label="头部摘要">
+  <div class="section-head">
+    <h2 class="section-title">头部摘要</h2>
+    <span class="section-note">业务关键信息</span>
+  </div>
+  <div class="kv-grid">
+    {% for item in detail.header_lines %}
+    <article class="kv-item">
+      <div class="kv-label">{{ item.label }}</div>
+      <p class="kv-value">{{ item.value }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% for section in detail.sections %}
+<section class="panel section-block" aria-label="{{ section.title }}">
+  <div class="section-head">
+    <h2 class="section-title">{{ section.title }}</h2>
+    <span class="section-note">分区明细</span>
+  </div>
+
+  {% if section.text %}
+  <div class="text-block">{{ section.text }}</div>
+  {% endif %}
+
+  {% if section.pairs %}
+  <div class="kv-grid" style="margin-top:10px;">
+    {% for item in section.pairs %}
+    <article class="kv-item">
+      <div class="kv-label">{{ item.label }}</div>
+      <p class="kv-value">{{ item.value }}</p>
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if section.cards %}
+  <div class="detail-grid" style="margin-top:10px;">
+    {% for item in section.cards %}
+    <article class="detail-card">
+      <h4>{{ item.title }}</h4>
+      <div class="detail-meta">{{ item.meta }}</div>
+
+      {% if item.bullets %}
+      <ul class="detail-list">
+        {% for bullet in item.bullets %}
+        <li>{{ bullet }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      {% if item.checks %}
+      <div class="detail-meta" style="margin-top:8px;">检查点</div>
+      <ul class="detail-list">
+        {% for check in item.checks %}
+        <li>{{ check }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section class="panel section-block" aria-label="快捷入口">
+  <div class="section-head">
+    <h2 class="section-title">快捷入口</h2>
+    <span class="section-note">辅助操作</span>
+  </div>
+  <div class="action-row" style="margin-top:0;">
+    <a class="button-secondary" href="/history">返回历史页</a>
+    <a class="button-light" href="/history/view?name={{ report_name|urlencode }}">查看技术详细报告</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}路径优化 - 工艺决策辅助系统{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="路径优化页头部">
+  <div>
+    <h1>路径优化执行台</h1>
+    <p>按工段目标筛选瓶颈并生成可执行动作，适配工程师日常调整流程。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">可用数据源</div>
+      <div class="hero-meta-value">{{ excels|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">默认角色</div>
+      <div class="hero-meta-value">{{ role }}</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="优化表单">
+  <div class="section-head">
+    <h2 class="section-title">优化输入</h2>
+    <span class="section-note">不改后端协议，仅做任务编排</span>
+  </div>
+
+  <form method="post" action="/optimize" class="form-shell">
+    <div class="form-main">
+      <div class="field-group">
+        <label for="excel_name">Excel 文件名（支持部分名称）</label>
+        <input id="excel_name" name="excel_name" list="excel_options" placeholder="输入文件名关键字即可">
+        <datalist id="excel_options">
+          {% for file in excels %}
+          <option value="{{ file }}"></option>
+          {% endfor %}
+        </datalist>
+        <p class="small muted">当前检测到 {{ excels|length }} 个可用文件。</p>
+      </div>
+
+      <div class="row-2">
+        <div class="field-group">
+          <label for="focus_stage">关注工段</label>
+          <input id="focus_stage" name="focus_stage" value="组装段">
+        </div>
+        <div class="field-group">
+          <label for="target_capacity">目标日产能</label>
+          <input id="target_capacity" name="target_capacity" type="number" min="0" value="3000">
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:12px;">
+        <label for="priority">优化优先级</label>
+        <select id="priority" name="priority">
+          <option value="先产能" selected>先产能</option>
+          <option value="先质量">先质量</option>
+          <option value="先人力">先人力</option>
+        </select>
+      </div>
+
+      <div class="action-row">
+        <button class="button-primary" type="submit">开始优化分析</button>
+        <a class="button-secondary" href="/history">查看历史记录</a>
+      </div>
+    </div>
+
+    <aside class="form-side" aria-label="优化说明">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h3 class="section-title" style="font-size:15px;">执行建议</h3>
+        <span class="section-note">工程师视角</span>
+      </div>
+      <ul class="info-list">
+        <li>优先填写真实工段名，便于后端做精准过滤。</li>
+        <li>目标日产能建议填班次目标值，避免偏离排产节奏。</li>
+        <li>优先级会影响建议排序，不会改变原始数据。</li>
+      </ul>
+      <div class="info-box" style="margin-top:12px;">
+        如未精确输入文件名，系统会按关键字匹配最接近的 Excel。
+      </div>
+      <div class="info-box" style="margin-top:10px;">
+        本页新增的是输入引导 UI，不新增后端字段。
+      </div>
+    </aside>
+  </form>
+</section>
+{% endblock %}

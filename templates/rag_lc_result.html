@@ -1,0 +1,145 @@
+﻿{% extends "_base_shell.html" %}
+
+{% block title %}LangChain 查询结果 - 工艺决策辅助系统{% endblock %}
+
+{% block head_extra %}
+<style>
+  .source-card {
+    border: 1px solid #d8e0e9;
+    border-radius: 6px;
+    background: #fbfcfe;
+    padding: 12px;
+  }
+
+  .source-card + .source-card {
+    margin-top: 10px;
+  }
+
+  .source-title {
+    margin: 0;
+    font-size: 15px;
+    color: #2a3d51;
+  }
+
+  .source-meta {
+    margin-top: 5px;
+    color: #607082;
+    font-size: 12px;
+  }
+
+  .answer-box {
+    white-space: pre-wrap;
+    line-height: 1.8;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel hero-panel" aria-label="LangChain 结果头部">
+  <div>
+    <h1>LangChain 结果已生成</h1>
+    <p>对照链路已完成检索与回答生成，可用于与正式版结果做并行评估。</p>
+  </div>
+  <div class="hero-meta">
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">参考片段</div>
+      <div class="hero-meta-value">{{ result.sources|length }}</div>
+    </article>
+    <article class="hero-meta-card">
+      <div class="hero-meta-label">报告状态</div>
+      <div class="hero-meta-value" style="font-size:13px;line-height:1.35;">已保存</div>
+    </article>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="问题概览">
+  <div class="section-head">
+    <h2 class="section-title">问题概览</h2>
+    <span class="section-note">报告路径：{{ report_path }}</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">问题</div>
+      <p class="kv-value">{{ result.question }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">引擎与模型</div>
+      <p class="kv-value">{{ result.engine_label }} · {{ result.manifest.chat_model if result.manifest else 'N/A' }}</p>
+    </article>
+  </div>
+
+  <div class="action-row">
+    <a class="button-primary" href="/rag-lc">继续对照查询</a>
+    <a class="button-secondary" href="/history">查看历史记录</a>
+    <a class="button-light" href="/rag">查看正式版问答</a>
+  </div>
+</section>
+
+<section class="panel section-block" aria-label="链路说明">
+  <div class="section-head">
+    <h2 class="section-title">链路说明</h2>
+    <span class="section-note">用于定位检索与排序差异</span>
+  </div>
+
+  <div class="kv-grid">
+    <article class="kv-item">
+      <div class="kv-label">检索策略</div>
+      <p class="kv-value">{{ result.retrieval.strategy }} · top_k={{ result.retrieval.top_k }} · fetch_k={{ result.retrieval.fetch_k }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">lambda_mult</div>
+      <p class="kv-value">{{ result.retrieval.lambda_mult }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">策略说明</div>
+      <p class="kv-value">{{ result.retrieval.why }}</p>
+    </article>
+    <article class="kv-item">
+      <div class="kv-label">索引规模</div>
+      <p class="kv-value">
+        {% if result.manifest %}
+        {{ result.manifest.doc_count }} 份文档 / {{ result.manifest.chunk_count }} 个片段
+        {% else %}
+        N/A
+        {% endif %}
+      </p>
+    </article>
+  </div>
+
+  {% if result.manifest %}
+  <div class="info-box" style="margin-top:10px;">
+    切分参数：chunk_size={{ result.manifest.chunk_size }}，chunk_overlap={{ result.manifest.chunk_overlap }}。
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel section-block" aria-label="回答内容">
+  <div class="section-head">
+    <h2 class="section-title">回答内容</h2>
+    <span class="section-note">可直接用于现场说明</span>
+  </div>
+  <div class="info-box answer-box">{{ result.answer }}</div>
+</section>
+
+<section class="panel section-block" aria-label="参考片段">
+  <div class="section-head">
+    <h2 class="section-title">参考片段</h2>
+    <span class="section-note">用于追溯回答来源</span>
+  </div>
+
+  {% if result.sources %}
+  <div class="card-list">
+    {% for c in result.sources %}
+    <article class="source-card">
+      <h3 class="source-title">{{ c.ref_id }} · {{ c.title }}</h3>
+      <div class="source-meta">{{ c.source_path }} · chunk={{ c.chunk_id or c.chunk_index }}</div>
+      <div style="margin-top:8px; color:#405161; line-height:1.7;">{{ c.quote }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="info-box">本次未返回可展示的参考片段。</div>
+  {% endif %}
+</section>
+{% endblock %}
